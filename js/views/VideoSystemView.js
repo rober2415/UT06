@@ -1,0 +1,921 @@
+"use strict";
+
+class VideoSystemView {
+    constructor() {
+        // Menú de navegación
+        this.menu = document.getElementById('navbar-nav');
+        // Contenedor principal
+        this.main = document.getElementById('content');
+
+        // Ventanas
+        this.newWindow = null;
+        this.openedWindows = [];
+    }
+
+    // Manejador de eventos
+    #EXCECUTE_HANDLER(handler, handlerArguments, scrollElement, data, url, event) {
+        handler(...handlerArguments);
+        const scroll = document.querySelector(scrollElement);
+        if (scroll) scroll.scrollIntoView();
+        // History
+        history.pushState(data, null, url);
+        event.preventDefault();
+    }
+
+    /**
+     * Limpiar contenido del HTML
+     */
+    #emptyMain() {
+        this.main.replaceChildren();
+    }
+
+    /**
+     * Enlazar manejador handleInit con el evento
+     */
+    bindInit(handler) {
+        // Evento click inicio
+        document.getElementById('navInicio').addEventListener('click', (event) => {
+            this.#EXCECUTE_HANDLER(handler, [], 'body', { action: 'init' }, '#', event);
+        });
+
+        // Evento click logo
+        document.getElementById('logo').addEventListener('click', (event) => {
+            this.#EXCECUTE_HANDLER(handler, [], 'body', { action: 'init' }, '#', event);
+        });
+    }
+
+    /**
+     * Mostrar categorías
+     */
+    showCategories(categories) {
+        // Limpiar contenido
+        this.#emptyMain();
+
+        // Crear contenedor para la lista de categorías
+        const container = document.createElement('div');
+        // Crear título
+        const h2 = document.createElement('h2');
+        h2.classList.add('h2', 'fw-bold', 'mb-4', 'border-start', 'border-5', 'border-black', 'ps-3', 'text-uppercase');
+        h2.innerHTML = 'Categorías';
+        // Añadir título al final
+        container.append(h2);
+
+        // Crear contenedor con las cards
+        const row = document.createElement('div');
+        row.classList.add('row', 'row-cols-1', 'row-cols-md-2', 'row-cols-lg-2', 'row-cols-xl-3', 'row-cols-xxl-4', 'mb-4', 'g-4');
+        container.append(row);
+        for (const cat of categories) {
+            row.insertAdjacentHTML("beforeend", ` 
+                <div class="col">
+                    <a href="#" data-category="${cat.category.name}">
+                    <div class="card bg-section h-100 shadow">
+                        <div class="card-header p-0 text-center">
+                            <h5 class="card-title fw-bold">${cat.category.name}</h5>
+                        </div>
+                        <div class="card-body d-flex flex-column p-3 text-center">
+                            <p>${cat.category.description}</p>   
+                        </div>
+                    </div>
+                    </a>
+                </div>`
+            );
+        }
+        // Añadir contenedor al final
+        this.main.append(container);
+    }
+
+    /**
+     * Mostrar categorías en menú
+     */
+    showCategoriesInMenu(categories) {
+        // Añadir menú categorías
+        const li = document.createElement('li');
+        li.classList.add('nav-item');
+        li.classList.add('dropdown');
+        li.insertAdjacentHTML('beforeend',
+            `<a class="nav-link dropdown-toggle text-uppercase" href="#" id="navCategorias" role="button"
+			data-bs-toggle="dropdown">Categorías</a>`
+        );
+
+        // Crear contenedor para añadir categorías
+        const container = document.createElement('ul');
+        container.classList.add('dropdown-menu');
+        // Añadir lista de categorías
+        for (const cat of categories) {
+            container.insertAdjacentHTML('beforeend', `
+                <li><a data-category="${cat.category.name}" class="dropdown-item text-uppercase" href="#">${cat.category.name}</a></li>`);
+        }
+        // Añadir contenedor de categorías al final del menú
+        li.append(container);
+        // Añadir menú al final
+        this.menu.append(li);
+    }
+
+    /**
+    * Mostrar producciones aleatorias
+    */
+    showRandomProductions(productions) {
+        // Crear contenedor para mostrar de producciones
+        const container = document.createElement('div');
+        // Crear título
+        const h2 = document.createElement('h2');
+        h2.classList.add('h2', 'fw-bold', 'mb-4', 'border-start', 'border-5', 'border-black', 'ps-3', 'text-uppercase');
+        h2.innerHTML = 'Producciones';
+        // Añadir título al final
+        container.append(h2);
+
+        // Crear contenedor con las cards de producciones
+        const row = document.createElement('div');
+        row.classList.add('row', 'row-cols-1', 'row-cols-md-2', 'row-cols-lg-2', 'row-cols-xl-3', 'row-cols-xxl-4', 'mb-4', 'g-4');
+        container.append(row);
+        for (const prod of productions) {
+            row.insertAdjacentHTML("beforeend", ` 
+                <div class="col">
+                    <a href="#" data-production="${prod.title}">
+                    <div class="card bg-section h-100 shadow">
+                        <div class="card-header p-0 text-center">
+                            <img src="${prod.image}">
+                        </div>
+                        <div class="card-body d-flex flex-column text-left">
+                            <ul>
+                                <li class="list-unstyled mb-0"><strong>Nacionalidad: </strong>${prod.nationality}</li>
+                                <li class="list-unstyled mb-0"><strong>Publicación: </strong>${prod.publication.toLocaleDateString()}</li>
+                                <li class="list-unstyled mb-0"><strong>Sinopsis: </strong>${prod.synopsis}</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer d-flex flex-column p-3">
+                            <h5 class="card-title fw-bold text-center">${prod.title}</h5>  
+                        </div>
+                    </div>
+                    </a>
+                </div>`
+            );
+        }
+        // Añadir contenedor al final
+        this.main.append(container);
+    }
+
+    /**
+     * Mostrar producciones
+     */
+    showProductionsByCategory(productions, categoryName) {
+        // Limpiar contenido
+        this.#emptyMain();
+
+        // Crear contenedor para la lista de producciones por categoría
+        const container = document.createElement('div');
+        // Crear título
+        const h2 = document.createElement('h2');
+        h2.classList.add('h2', 'fw-bold', 'mb-4', 'border-start', 'border-5', 'border-black', 'ps-3', 'text-uppercase');
+        h2.innerHTML = categoryName ? `Producciones de ${categoryName}` : `Producciones`;
+        // Añadir título al final
+        container.append(h2);
+
+        // Crear contenedor con las cards de producciones
+        const row = document.createElement('div');
+        row.classList.add('row', 'row-cols-1', 'row-cols-md-2', 'row-cols-lg-2', 'row-cols-xl-3', 'row-cols-xxl-4', 'g-4');
+        container.append(row);
+        for (const prod of productions) {
+            row.insertAdjacentHTML("beforeend", ` 
+                <div class="col">
+                    <a href="#" data-production="${prod.title}">
+                    <div class="card bg-section h-100 shadow">
+                        <div class="card-header p-0 text-center">
+                            <img src="${prod.image}">
+                        </div>
+                        <div class="card-body d-flex flex-column text-left">
+                            <ul>
+                                <li class="list-unstyled mb-0"><strong>Nacionalidad: </strong>${prod.nationality}</li>
+                                <li class="list-unstyled mb-0"><strong>Publicación: </strong>${prod.publication.toLocaleDateString()}</li>
+                                <li class="list-unstyled mb-0"><strong>Sinopsis: </strong>${prod.synopsis}</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer d-flex flex-column p-3">
+                            <h5 class="card-title fw-bold text-center">${prod.title}</h5>  
+                        </div>
+                    </div>
+                    </a>
+                </div>`
+            );
+        }
+        // Añadir contenedor al final
+        this.main.append(container);
+    }
+
+    /**
+     * Enlazar manejador handleProductionsByCategory con el evento
+     */
+    bindProductionsByCategory(handler) {
+        // Buscar todos los enlaces de categorías
+        const links = document.querySelectorAll('a[data-category]');
+
+        for (const link of links) {
+            // Evento click
+            link.addEventListener('click', (event) => {
+                // Obtener nombre categoría
+                const { category } = event.currentTarget.dataset;
+
+                // Ejecutar manejador
+                this.#EXCECUTE_HANDLER(
+                    handler,
+                    [category],
+                    '#content',
+                    { action: 'productionsByCategory', category },
+                    '#productionsByCategory',
+                    event);
+            });
+        }
+    }
+
+    /**
+     * Mostrar detalles de producción
+     */
+    showProductionDetail(prod, actNames = [], dirNames = []) {
+        // Limpiar contenido
+        this.#emptyMain();
+
+        // Crear enlaces para los actores
+        let actors = "";
+        if (actNames.length > 0) {
+            for (const actName of actNames) {
+                actors += `<a href="#" data-actor="${actName}" class="badge bg-secondary">${actName}</a> `;
+            }
+        } else {
+            actors = "Sin actores";
+        }
+
+        // Crear enlaces para los directores
+        let directores = "";
+        if (dirNames.length > 0) {
+            for (const dirName of dirNames) {
+                directores += `<a href="#" data-director="${dirName}" class="badge bg-secondary">${dirName}</a> `;
+            }
+        } else {
+            directores = "Sin directores";
+        }
+
+        // Crear contenedor para los detalles
+        const container = document.createElement('div');
+        container.insertAdjacentHTML('beforeend', `
+            <div class="row">
+                <div class="col-md-8">
+                    <h2 class="h2 fw-bold mb-4 border-start border-5 border-black ps-3 text-uppercase">${prod.title}</h2>
+        
+                    <div class="mb-4">
+                        <span class="badge bg-secondary mb-2">${prod.nationality}</span>
+                        <span class="badge bg-outline-dark border text-dark mb-2 ms-2">
+                            ${prod.publication.toLocaleDateString()}
+                        </span>
+                    </div>
+                    
+                    <strong>Sinopsis</strong>
+                    <p class="text-muted">${prod.synopsis}</p>
+
+                    <hr class="my-4">
+
+                    <ul>
+                        <li><strong>Dirección:</strong> <div class="d-inline-block">${directores}</div></li>
+                        <li><strong>Reparto:</strong> <div class="d-inline-block">${actors}</div></li>
+                    </ul>
+
+                    <div class="mt-4">
+                        <button id="btnProd-open-window" class="btn btn-main btn-lg shadow-sm" data-production="${prod.title}">
+                            Ver en nueva ventana
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-md-4 bg-light d-flex align-items-center justify-content-center">
+                    <img src="${prod.image}" class="img-fluid w-100 h-100" style="object-fit: cover; min-height: 400px;">
+                </div>
+            </div>`
+        );
+        // Añadir contenedor al final
+        this.main.append(container);
+    }
+
+    /**
+     * Enlazar manejador handleShowProductionDetail con el evento
+     */
+    bindProductionDetail(handler) {
+        // Buscar todos los enlaces de producciones
+        const links = this.main.querySelectorAll('a[data-production]');
+
+        for (const link of links) {
+            // Evento click
+            link.addEventListener('click', (event) => {
+                // Ottener el nombre de producción
+                const { production } = event.currentTarget.dataset;
+
+                // Ejecutar manejador
+                this.#EXCECUTE_HANDLER(
+                    handler,
+                    [production],
+                    '#content',
+                    { action: 'productionDetail', production },
+                    '#productionDetail',
+                    event
+                );
+            });
+        }
+    }
+
+    /**
+     * Mostrar actores
+     */
+    showActors(actors) {
+        // Limpiar contenido
+        this.#emptyMain();
+
+        // Crear contenedor para la lista de actores
+        const container = document.createElement('div');
+        // Crear título
+        const h2 = document.createElement('h2');
+        h2.classList.add('h2', 'fw-bold', 'mb-4', 'border-start', 'border-5', 'border-black', 'ps-3', 'text-uppercase');
+        h2.innerHTML = 'Actores';
+        // Añadir título al final
+        container.append(h2);
+
+        // Crear contenedor con las cards de actores
+        const row = document.createElement('div');
+        row.classList.add('row', 'row-cols-1', 'row-cols-md-2', 'row-cols-lg-2', 'row-cols-xl-3', 'row-cols-xxl-4', 'g-4');
+        container.append(row);
+        for (const act of actors) {
+            row.insertAdjacentHTML("beforeend", ` 
+                <div class="col">
+                    <a href="#" data-actor="${act.actor.name}">
+                    <div class="card bg-section h-100 shadow overflow-hidden">
+                        <div class="card-header p-0 text-center">
+                            <img src="${act.actor.picture}">
+                        </div>
+                        <div class="card-body d-flex flex-column text-left">
+                            <ul>
+                                <li class="list-unstyled mb-0"><strong>Nacimiento: </strong>${act.actor.born.toLocaleDateString()}</li>
+                                <li class="list-unstyled mb-0"><strong>Apellido 1: </strong>${act.actor.lastname1}</li>
+                                <li class="list-unstyled mb-0"><strong>Apellido 2: </strong>${act.actor.lastname2}</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer d-flex flex-column p-3">
+                            <h5 class="card-title fw-bold text-center">${act.actor.name}</h5>  
+                        </div>
+                    </div>
+                    </a>
+                </div>`
+            );
+        }
+        // Añadir contenedor al final
+        this.main.append(container);
+    }
+
+    /**
+     * Mostrar categorías en menú
+     */
+    showActorsInMenu() {
+        // Añadir menú actores
+        const li = document.createElement('li');
+        li.classList.add('nav-item');
+        li.insertAdjacentHTML('beforeend',
+            `<a id="navActores" class="nav-link text-uppercase" href="#" role="button">Actores</a>`
+        );
+        // Añadir menú al final
+        this.menu.append(li);
+    }
+
+    /**
+     * Enlazar manejador handleActors con el evento
+     */
+    bindActors(handler) {
+        // Buscar enlace de actores
+        const navAct = document.getElementById('navActores');
+
+        // Evento click
+        navAct.addEventListener('click', (event) => {
+            // Ejecución de manejador
+            this.#EXCECUTE_HANDLER(
+                handler,
+                [],
+                '#content',
+                { action: 'actors' },
+                '#actors',
+                event);
+        });
+    }
+
+    /**
+     * Mostrar detalles de actor
+     */
+    showActorDetail(act, prodNames = []) {
+        // Limpiar contenido
+        this.#emptyMain();
+
+        // Crear enlaces para los actores
+        let productions = "";
+        if (prodNames.length > 0) {
+            for (const prod of prodNames) {
+                productions += `<a href="#" data-production="${prod.title}" class="badge bg-secondary">${prod.title}</a> `;
+            }
+        } else {
+            productions = "Sin producciones";
+        }
+
+        // Crear contenedor para los detalles
+        const container = document.createElement('div');
+        container.insertAdjacentHTML('beforeend', `
+            <div class="row">
+                <div class="col-md-8">
+                    <h2 class="h2 fw-bold mb-4 border-start border-5 border-black ps-3 text-uppercase">${act.name} ${act.lastname1} ${act.lastname2}</h2>
+                    <div>
+                        <strong>Nombre</strong>
+                        <p class="text-muted">${act.name}</p>
+
+                        <strong>Apellidos</strong>
+                        <p class="text-muted">${act.lastname1} ${act.lastname2}</p>
+                        
+                        <strong>Nacimiento</strong>
+                        <p class="text-muted">${act.born.toLocaleDateString()}</p>
+
+                        <hr class="my-4">
+
+                        <strong>Producciones:</strong> 
+                        <span>${productions}</span>
+                    </div>
+                    <div class="mt-4">
+                        <button id="btnAct-open-window" class="btn btn-main btn-lg shadow-sm" data-actor="${act.name}">
+                            Ver en nueva ventana
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-md-4 bg-light d-flex align-items-center justify-content-center">
+                    <img src="${act.picture}" class="img-fluid w-100 h-100" style="object-fit: cover; min-height: 100%;">
+                </div>
+            </div>`
+        );
+        // Añadir contenedor al final
+        this.main.append(container);
+    }
+
+    /**
+     * Enlazar manejador handleShowActorDetail con el evento
+     */
+    bindActorDetail(handler) {
+        // Buscar todos los enlaces de actores
+        const links = this.main.querySelectorAll('a[data-actor]');
+
+        for (const link of links) {
+            // Evento click
+            link.addEventListener('click', (event) => {
+                // Obtener el nombre del actor
+                const { actor } = event.currentTarget.dataset;
+
+                // Ejecutar manejador
+                this.#EXCECUTE_HANDLER(
+                    handler,
+                    [actor],
+                    '#content',
+                    { action: 'actorDetail', actor },
+                    '#actorDetail',
+                    event
+                );
+            });
+        }
+    }
+
+    /**
+     * Mostrar directores
+     */
+    showDirectors(directors) {
+        // Limpiar contenido
+        this.#emptyMain();
+
+        // Crear contenedor para la lista de directores
+        const container = document.createElement('div');
+        // Crear título
+        const h2 = document.createElement('h2');
+        h2.classList.add('h2', 'fw-bold', 'mb-4', 'border-start', 'border-5', 'border-black', 'ps-3', 'text-uppercase');
+        h2.innerHTML = 'Directores';
+        // Añadir título al final
+        container.append(h2);
+
+        // Crear contenedor con las cards de directores
+        const row = document.createElement('div');
+        row.classList.add('row', 'row-cols-1', 'row-cols-md-2', 'row-cols-lg-2', 'row-cols-xl-3', 'row-cols-xxl-4', 'g-4');
+        container.append(row);
+        for (const dir of directors) {
+            row.insertAdjacentHTML("beforeend", ` 
+                <div class="col">
+                    <a href="#" data-director="${dir.director.name}">
+                    <div class="card bg-section h-100 shadow">
+                        <div class="card-header p-0 text-center">
+                            <img src="${dir.director.picture}">
+                        </div>
+                        <div class="card-body d-flex flex-column text-left">
+                            <ul>
+                                <li class="list-unstyled mb-0"><strong>Nacimiento: </strong>${dir.director.born.toLocaleDateString()}</li>
+                                <li class="list-unstyled mb-0"><strong>Apellido 1: </strong>${dir.director.lastname1}</li>
+                                <li class="list-unstyled mb-0"><strong>Apellido 2: </strong>${dir.director.lastname2}</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer d-flex flex-column p-3">
+                            <h5 class="card-title fw-bold text-center">${dir.director.name}</h5>  
+                        </div>
+                    </div>
+                    </a>
+                </div>`
+            );
+        }
+        // Añadir contenedor al final
+        this.main.append(container);
+    }
+
+    /**
+     * Mostrar categorías en menú
+     */
+    showDirectorsInMenu() {
+        // Añadir menú directores
+        const li = document.createElement('li');
+        li.classList.add('nav-item');
+        li.insertAdjacentHTML('beforeend',
+            `<a id="navDirectores" class="nav-link text-uppercase" href="#" role="button">Directores</a>`
+        );
+        // Añadir menú al final
+        this.menu.append(li);
+    }
+
+    /**
+    * Enlazar manejador handleDirectors con el evento
+    */
+    bindDirectors(handler) {
+        // Buscar enlace de directores
+        const navAct = document.getElementById('navDirectores');
+
+        // Evento click
+        navAct.addEventListener('click', (event) => {
+            // Ejecución de manejador
+            this.#EXCECUTE_HANDLER(
+                handler,
+                [],
+                '#content',
+                { action: 'directors' },
+                '#directors',
+                event);
+        });
+    }
+
+    /**
+     * Mostrar detalles de director
+     */
+    showDirectorDetail(dir, prodNames = []) {
+        // Limpiar contenido
+        this.#emptyMain();
+
+        // Crear enlaces para los directores
+        let productions = "";
+        if (prodNames.length > 0) {
+            for (const prod of prodNames) {
+                productions += `<a href="#" data-production="${prod.title}" class="badge bg-secondary">${prod.title}</a> `;
+            }
+        } else {
+            productions = "Sin producciones";
+        }
+
+        // Crear contenedor para los detalles
+        const container = document.createElement('div');
+        container.insertAdjacentHTML('beforeend', `
+            <div class="row">
+                <div class="col-md-8">
+                    <h2 class="h2 fw-bold mb-4 border-start border-5 border-black ps-3 text-uppercase">${dir.name} ${dir.lastname1} ${dir.lastname2}</h2>
+                    <div>
+                        <strong>Nombre</strong>
+                        <p class="text-muted">${dir.name}</p>
+                        <strong>Apellidos</strong>
+                        <p class="text-muted">${dir.lastname1} ${dir.lastname2}</p> 
+                        <strong>Nacimiento</strong>
+                        <p class="text-muted">${dir.born.toLocaleDateString()}</p>
+                        <hr class="my-4">
+                        <strong>Producciones:</strong> 
+                        <span>${productions}</span>
+                    </div>
+                    <div class="mt-4">
+                        <button id="btnDir-open-window" class="btn btn-main btn-lg shadow-sm" data-director="${dir.name}">
+                            Ver en nueva ventana
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-md-4 bg-light d-flex align-items-center justify-content-center">
+                    <img src="${dir.picture}" class="img-fluid w-100 h-100" style="object-fit: cover; min-height: 100%;">
+                </div>
+            </div>`
+        );
+        // Añadir contenedor al final
+        this.main.append(container);
+    }
+
+    /**
+     * Enlazar manejador handleShowDirectorDetail con el evento
+     */
+    bindDirectorDetail(handler) {
+        // Buscar todos los enlaces de producciones
+        const links = this.main.querySelectorAll('a[data-director]');
+
+        for (const link of links) {
+            // Evento click
+            link.addEventListener('click', (event) => {
+                // Obtener el nombre del director
+                const { director } = event.currentTarget.dataset;
+
+                // Ejecutar manejador
+                this.#EXCECUTE_HANDLER(
+                    handler,
+                    [director],
+                    '#content',
+                    { action: 'directorDetail', director },
+                    '#directorDetail',
+                    event
+                );
+            });
+        }
+    }
+
+    /**
+    * Mostrar producción en ventana nueva
+    */
+    showProductionInNewWindow(prod) {
+        // Acceder al main y header de la ventana hija
+        const main = this.newWindow.document.querySelector('main');
+        const header = this.newWindow.document.querySelector('header nav');
+
+        // Limpiar contenido
+        main.replaceChildren();
+        if (header) header.replaceChildren();
+
+        if (prod) {
+            // Título página nueva
+            this.newWindow.document.title = `Detalles de ${prod.title}`;
+
+            // Crear contenedor para los detalles de producción
+            const container = this.newWindow.document.createElement('div');
+            container.classList.add('container');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="row">
+                    <div class="col-md-8 p-4">
+                        <h2 class="h2 fw-bold mb-4 border-start border-5 border-black ps-3 text-uppercase">${prod.title}</h2>
+            
+                        <div class="mb-4">
+                            <span class="badge bg-secondary mb-2">${prod.nationality}</span>
+                            <span class="badge bg-outline-dark border text-dark mb-2 ms-2">
+                                ${prod.publication.toLocaleDateString()}
+                            </span>
+                        </div>
+                        
+                        <strong>Sinopsis</strong>
+                        <p class="text-muted">${prod.synopsis}</p>
+
+                        <hr class="my-4">
+
+                        <div class="mt-4">
+                            <button class="btn btn-main" onclick="window.close()">Cerrar Ficha</button>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 bg-light d-flex align-items-center justify-content-center">
+                        <img src="${prod.image}" class="img-fluid w-100 h-100" style="object-fit: cover; min-height: 400px;">
+                    </div>
+                </div>`
+            );
+            // Añadir contenedor al final
+            main.append(container);
+        }
+        // Hacer scroll al inicio de la nueva ventana
+        this.newWindow.document.body.scrollIntoView();
+    }
+
+    /**
+     * Enlazar manejador handleOpenNewWindow con el evento
+     */
+    bindShowProductionInNewWindow(handler) {
+        // Buscar enlace de boton btnProd
+        const bOpen = document.getElementById('btnProd-open-window')
+
+        if (bOpen) {
+            // Evento click
+            bOpen.addEventListener('click', (event) => {
+                // Obtener el nombre de producción
+                const { production } = bOpen.dataset;
+
+                // Detener propagación en padres o repetidos
+                event.preventDefault();
+                event.stopPropagation();
+
+                // Abrir la ventana
+                this.newWindow = window.open('newwindow.html', '_blank', 'width=800,height=500');
+
+                // Añadir ventana al array
+                this.openedWindows.push(this.newWindow);
+                this.openedWindows = this.openedWindows.filter(win => win && !win.closed);
+
+                // Esperar a que cargue
+                this.newWindow.addEventListener('load', () => {
+                    handler(production);
+                }, { once: true });
+            });
+        }
+    }
+
+    /**
+    * Mostrar actor en ventana nueva
+    */
+    showActorInNewWindow(act) {
+        // Acceder al main y header de la ventana hija
+        const main = this.newWindow.document.querySelector('main');
+        const header = this.newWindow.document.querySelector('header nav');
+
+        // Limpiar contenido
+        main.replaceChildren();
+        if (header) header.replaceChildren();
+
+        if (act) {
+            // Título página nueva
+            this.newWindow.document.title = `Detalles de ${act.name}`;
+
+            // Crear contenedor para los detalles del actor
+            const container = this.newWindow.document.createElement('div');
+            container.classList.add('container');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="row">
+                    <div class="col-md-8 p-4">
+                        <h2 class="h2 fw-bold mb-4 border-start border-5 border-black ps-3 text-uppercase">${act.name} ${act.lastname1} ${act.lastname2}</h2>
+                        <div>
+                            <stron>Nombre</stron>
+                            <p class="text-muted">${act.name}</p>
+
+                            <strong>Apellidos</strong>
+                            <p class="text-muted">${act.lastname1} ${act.lastname2}</p>
+                            
+                            <strong>Nacimiento</strong>
+                            <p class="text-muted">${act.born.toLocaleDateString()}</p>
+
+                            <hr class="my-4">
+                        </div>
+                        <div class="mt-4">
+                            <button class="btn btn-main" onclick="window.close()">Cerrar Ficha</button>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 bg-light d-flex align-items-center justify-content-center">
+                        <img src="${act.picture}" class="img-fluid w-100 h-100" style="object-fit: cover; min-height: 100%;">
+                    </div>
+                </div>`
+            );
+            // Añadir contenedor al final
+            main.append(container);
+        }
+        // Hacer scroll al inicio de la nueva ventana
+        this.newWindow.document.body.scrollIntoView();
+    }
+
+    /**
+     * Enlazar manejador handleOpenActorWindow con el evento
+     */
+    bindShowActorInNewWindow(handler) {
+        // Buscar enlace de boton btnAct
+        const bOpen = document.getElementById('btnAct-open-window')
+
+        if (bOpen) {
+            // Evento click
+            bOpen.addEventListener('click', (event) => {
+                // Obtener el nombre del actor
+                const { actor } = bOpen.dataset;
+
+                // Detener propagación en padres o repetidos
+                event.preventDefault();
+                event.stopPropagation();
+
+                // Abrir la ventana
+                this.newWindow = window.open('newwindow.html', '_blank', 'width=800,height=500');
+
+                // Añadir ventana al array
+                this.openedWindows.push(this.newWindow);
+                this.openedWindows = this.openedWindows.filter(win => win && !win.closed);
+
+                // Esperar a que cargue
+                this.newWindow.addEventListener('load', () => {
+                    handler(actor);
+                }, { once: true });
+            });
+        }
+    }
+
+    /**
+     * Mostrar director en ventana nueva
+     */
+    showDirectorInNewWindow(dir) {
+        // Acceder al main y header de la ventana hija
+        const main = this.newWindow.document.querySelector('main');
+        const header = this.newWindow.document.querySelector('header nav');
+
+        // Limpiar contenido
+        main.replaceChildren();
+        if (header) header.replaceChildren();
+
+        if (dir) {
+            // Título página nueva
+            this.newWindow.document.title = `Detalles de ${dir.name}`;
+
+            // Crear contenedor para los detalles del director
+            const container = this.newWindow.document.createElement('div');
+            container.classList.add('container');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="row">
+                    <div class="col-md-8 p-4">
+                        <h2 class="h2 fw-bold mb-4 border-start border-5 border-black ps-3 text-uppercase">${dir.name} ${dir.lastname1} ${dir.lastname2}</h2>
+                        <div>
+                            <strong>Nombre</strong>
+                            <p class="text-muted">${dir.name}</p>
+                            <strong>Apellidos</strong>
+                            <p class="text-muted">${dir.lastname1} ${dir.lastname2}</p> 
+                            <strong>Nacimiento</strong>
+                            <p class="text-muted">${dir.born.toLocaleDateString()}</p>
+                            <hr class="my-4">
+                        </div>
+                        <div class="mt-4">
+                            <button class="btn btn-main" onclick="window.close()">Cerrar Ficha</button>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 bg-light d-flex align-items-center justify-content-center">
+                        <img src="${dir.picture}" class="img-fluid w-100 h-100" style="object-fit: cover; min-height: 100%;">
+                    </div>
+                </div>`
+            );
+            // Añadir contenedor al final
+            main.append(container);
+        }
+        // Hacer scroll al inicio de la nueva ventana
+        this.newWindow.document.body.scrollIntoView();
+    }
+
+    /**
+     * Enlazar manejador handleOpenDirectorWindow con el evento
+     */
+    bindShowDirectorInNewWindow(handler) {
+        // Buscar enlace de boton btnDir
+        const bOpen = document.getElementById('btnDir-open-window')
+
+        if (bOpen) {
+            // Evento click
+            bOpen.addEventListener('click', (event) => {
+                // Obtener el nombre del director
+                const { director } = bOpen.dataset;
+
+                // Detener propagación en padres o repetidos
+                event.preventDefault();
+                event.stopPropagation();
+
+                // Abrir la ventana
+                this.newWindow = window.open('newwindow.html', '_blank', 'width=800,height=500');
+
+                // Añadir ventana al array
+                this.openedWindows.push(this.newWindow);
+                this.openedWindows = this.openedWindows.filter(win => win && !win.closed);
+
+                // Esperar a que cargue
+                this.newWindow.addEventListener('load', () => {
+                    handler(director);
+                }, { once: true });
+            });
+        }
+    }
+
+    /**
+     * Cerrar ventanas
+     */
+    closeAllWindows() {
+        for (const win of this.openedWindows) {
+            if (win && !win.closed) {
+                // Cerrar ventannas
+                win.close();
+            }
+        }
+        // Vaciar el array
+        this.openedWindows = [];
+    }
+
+    /**
+     * Enlazar manejador handleCloseAllWindows con el evento
+     */
+    bindCloseAllWindows(handler) {
+        // Buscar enlace de cerrar ventanas
+        const navClose = document.getElementById('navCerrarVentanas');
+        if (navClose) {
+            // Evento click
+            navClose.addEventListener('click', (event) => {
+                event.preventDefault();
+                handler();
+            });
+        }
+    }
+}
+
+export default VideoSystemView;
