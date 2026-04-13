@@ -136,7 +136,7 @@ class VideoSystemController {
             this.handleNewProductionForm,
             this.handleRemoveProductionForm,
             this.handleAssignProductionForm,
-            //this.handleDeassignCategoryForm
+            this.handleDeassignProductionForm
         );
     }
 
@@ -524,7 +524,7 @@ class VideoSystemController {
     };
 
     /**
-     * Manejador crear produccion
+     * Manejador asignar produccion
      */
     handleAssignProduction = (prodTitle, actors, directors) => {
         let done;
@@ -564,6 +564,90 @@ class VideoSystemController {
         }
         // Pasar el resultado al modal de la vista
         this.#VIEW.showAssignProductionModal(done, production, error);
+    };
+
+    /**
+     * Manejador mostrar formulario desasignar categoría
+     */
+    handleDeassignProductionForm = () => {
+        // Pasar categorías del modelo a la vista
+        this.#VIEW.showDeassignProductionForm(this.#MODEL.getProductions());
+        // Pasar manejador al método para actualizar producciones de categorías
+        this.#VIEW.bindUpdateDeassignProductions(this.handleUpdateDeassignList);
+        // Pasar manejador al método para desasignar categoría
+        this.#VIEW.bindDeassignProductionForm(this.handleDeassignProduction);
+    };
+
+    /**
+     * Manejador actualizar lista producciones
+     */
+    handleUpdateDeassignList = (title) => {
+        // Obtener producciones por título
+        let production = null;
+        for (const prod of this.#MODEL.getProductions()) {
+            if (prod.title === title) {
+                production = prod;
+            }
+        }
+
+        // Obtener actores que contengan la producción
+        const actProduction = [];
+        for (const act of this.#MODEL.getCast(production)) {
+            actProduction.push(act.name);
+        }
+
+        // Obtener directores que contengan la producción
+        const dirProduction = [];
+        for (const dir of this.#MODEL.getDirectors()) {
+            if (dir.productions.has(title)) {
+                dirProduction.push(dir.director.name);
+            }
+        }
+
+        // Pasar actores a la vista
+        this.#VIEW.updateDeassignProductions(actProduction, dirProduction);
+    };
+
+    /**
+     * Manejador desasignar categoría
+     */
+    handleDeassignProduction = (prodTitle, actors, directors) => {
+        let done;
+        let error;
+        let production;
+
+        try {
+            // Obtener producción
+            for (const prod of this.#MODEL.getProductions()) {
+                if (prod.title === prodTitle) {
+                    production = prod;
+                    break;
+                }
+            }
+
+            // Obtener actores
+            for (const actName of actors) {
+                // Obtener actores
+                const actorObj = this.#MODEL.createPerson(actName);
+                // Asignar producción a actor
+                this.#MODEL.deassignActor(actorObj, production);
+            }
+
+            // Obtener directores
+            for (const dirName of directors) {
+                // Obtener directores
+                const directorObj = this.#MODEL.createPerson(dirName);
+                // Asignar producción a director
+                this.#MODEL.deassignDirector(directorObj, production);
+            }
+
+            done = true;
+        } catch (exception) {
+            done = false;
+            error = exception;
+        }
+        // Pasar el resultado al modal de la vista
+        this.#VIEW.showDeassignProductionModal(done, production, error);
     };
 
 }

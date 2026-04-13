@@ -2,7 +2,7 @@
 
 import { Movie } from '../models/Movie.js';
 import { Serie } from '../models/Serie.js';
-import { newProductionValidation, assignProductionValidation } from './Validation.js';
+import { newProductionValidation, assignProductionValidation, deassignProductionValidation } from './Validation.js';
 
 class VideoSystemView {
     constructor() {
@@ -1454,6 +1454,136 @@ class VideoSystemView {
      */
     bindAssignProductionForm(handler) {
         assignProductionValidation(handler);
+    }
+
+    /**
+     * Mostrar formulario desasignar producción
+     */
+    showDeassignProductionForm(productions) {
+        // Limpiar contenido
+        this.#emptyMain();
+        const container = document.createElement('div');
+        container.classList.add('container', 'my-3');
+        container.innerHTML = `<h2 class="h2 fw-bold mb-4 border-start border-5 border-black ps-3 text-uppercase">Desasignar Categoría</h2>`;
+
+        const form = document.createElement('form');
+        form.name = 'fDeassignProduction';
+        form.setAttribute('novalidate', '');
+
+        form.innerHTML = `
+        <div class="mb-3">
+            <label class="form-label">Categoría Origen</label>
+            <select class="form-select" id="dcProduction" name="dcProduction" required>
+                
+            </select>
+            <div class="invalid-feedback">Selecciona una producción.</div>
+            <div class="valid-feedback">Correcto.</div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Actores asignados</label>
+            <select class="form-select" id="dcActors" name="dcActors" multiple required>
+                <option value="">Selecciona primero una producción...</option>
+            </select>
+            <div class="invalid-feedback">Selecciona al menos un actor para eliminar.</div>
+            <div class="valid-feedback">Correcto.</div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Directores asignados</label>
+            <select class="form-select" id="dcDirectors" name="dcDirectors" multiple required>
+                <option value="">Selecciona primero una producción...</option>
+            </select>
+            <div class="invalid-feedback">Selecciona al menos un director para eliminar.</div>
+            <div class="valid-feedback">Correcto.</div>
+        </div>
+        <button type="submit" class="btn btn-danger">Desasignar</button>
+        <button type="reset" class="btn btn-secondary">Limpiar</button>
+    `;
+        // Mostrar categorías
+        const dcProduction = form.querySelector('#dcProduction');
+        for (const prod of productions) {
+            dcProduction.insertAdjacentHTML('beforeend', `<option value="${prod.title}">${prod.title}</option>`);
+        }
+
+        container.append(form);
+        this.main.append(container);
+    }
+
+    /**
+     * Actualizar producciones según la categoría elegida
+     */
+    updateDeassignProductions(actors, directors) {
+        const dcActors = document.getElementById('dcActors');
+        // Limpiar contenido
+        dcActors.replaceChildren();
+        // Mostrar producciones
+        for (const act of actors) {
+            dcActors.insertAdjacentHTML('beforeend', `<option value="${act}">${act}</option>`);
+        }
+
+        const dcDirectors = document.getElementById('dcDirectors');
+        // Limpiar contenido
+        dcDirectors.replaceChildren();
+        // Mostrar producciones
+        for (const dir of directors) {
+            dcDirectors.insertAdjacentHTML('beforeend', `<option value="${dir}">${dir}</option>`);
+        }
+    }
+
+    /**
+     * Enlazar manejador handleUpdateDeassignList con evento
+     */
+    bindUpdateDeassignProductions(handler) {
+        // Evento change
+        document.forms.fDeassignProduction.dcProduction.addEventListener('change', (event) => {
+            handler(event.target.value);
+        });
+    }
+
+    /**
+     * Mostrar modal confirmación
+     */
+    showDeassignProductionModal(done, production, error) {
+        // Contenedor modal
+        const messageModalContainer = document.getElementById('messageModal');
+        const messageModal = new bootstrap.Modal('#messageModal');
+
+        // Título
+        const title = document.getElementById('messageModalTitle');
+        title.innerHTML = done ? 'Producción desasignada correctamente' : 'Error al desasignar producción';
+
+        // Mensaje
+        const body = messageModalContainer.querySelector('.modal-body');
+        body.replaceChildren();
+        if (done) {
+            body.insertAdjacentHTML(
+                'afterbegin',
+                `<div class="p-3">La producción <strong>${production.title}</strong> ha sido desasignada correctamente.</div>`
+            );
+        } else {
+            body.insertAdjacentHTML(
+                'afterbegin',
+                `<div class="error text-danger p-3">
+                <i class="bi bi-exclamation-triangle"></i>
+                La producción <strong>${production.title} - ${production.title}</strong> no ha podido desasignarse correctamente.
+                </div>`
+            );
+        }
+
+        // Mostrar modal
+        messageModal.show();
+
+        // Evento cerrar modal
+        messageModalContainer.addEventListener('hidden.bs.modal', () => {
+            if (done) document.fDeassignProduction.reset();
+            document.fDeassignProduction.dcProduction.focus();
+        }, { once: true });
+    }
+
+    /**
+     * Enlazar manejador handleDeassignProduction con evento
+     */
+    bindDeassignProductionForm(handler) {
+        deassignProductionValidation(handler);
     }
 }
 
