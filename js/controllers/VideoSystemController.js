@@ -134,7 +134,9 @@ class VideoSystemController {
         this.#VIEW.showAdminMenu();
         this.#VIEW.bindAdminMenu(
             this.handleNewProductionForm,
-            this.handleRemoveProductionForm
+            this.handleRemoveProductionForm,
+            this.handleAssignProductionForm,
+            //this.handleDeassignCategoryForm
         );
     }
 
@@ -509,7 +511,60 @@ class VideoSystemController {
         }
         // Pasar el resultado al modal de la vista
         this.#VIEW.showRemoveProductionModal(done, production, error);
-    }
+    };
+
+    /**
+     * Manejador mostrar el formulario de asignar producción
+     */
+    handleAssignProductionForm = () => {
+        // Pasar producción y producciones del modelo a la vista
+        this.#VIEW.showAssignProductionForm(this.#MODEL.getProductions(), this.#MODEL.getActors(), this.#MODEL.getDirectors());
+        // Pasar manejador al método para asignar producción
+        this.#VIEW.bindAssignProductionForm(this.handleAssignProduction);
+    };
+
+    /**
+     * Manejador crear produccion
+     */
+    handleAssignProduction = (prodTitle, actors, directors) => {
+        let done;
+        let error;
+        let production;
+
+        try {
+            // Obtener producción
+            for (const prod of this.#MODEL.getProductions()) {
+                if (prod.title === prodTitle) {
+                    production = prod;
+                    break;
+                }
+            }
+
+            // Obtener actores
+            for (const actName of actors) {
+                // Obtener actores
+                const actorObj = this.#MODEL.createPerson(actName);
+                // Asignar producción a actor
+                this.#MODEL.assignActor(actorObj, production);
+            }
+
+            // Obtener directores
+            for (const dirName of directors) {
+                // Obtener directores
+                const directorObj = this.#MODEL.createPerson(dirName);
+                // Asignar producción a director
+                this.#MODEL.assignDirector(directorObj, production);
+            }
+
+            done = true;
+        } catch (exception) {
+            done = false;
+            error = exception;
+            console.error("ERROR REAL:", exception);
+        }
+        // Pasar el resultado al modal de la vista
+        this.#VIEW.showAssignProductionModal(done, production, error);
+    };
 
 }
 

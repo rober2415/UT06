@@ -2,7 +2,7 @@
 
 import { Movie } from '../models/Movie.js';
 import { Serie } from '../models/Serie.js';
-import { newProductionValidation } from './Validation.js';
+import { newProductionValidation, assignProductionValidation } from './Validation.js';
 
 class VideoSystemView {
     constructor() {
@@ -952,14 +952,16 @@ class VideoSystemView {
         suboptions.classList.add('dropdown-menu');
         suboptions.insertAdjacentHTML('beforeend', '<li><a id="newProduction" class="dropdown-item" href="#new-production">Crear producción</a></li>');
         suboptions.insertAdjacentHTML('beforeend', '<li><a id="remProduction" class="dropdown-item" href="#rem-production">Eliminar producción</a></li>');
+        suboptions.insertAdjacentHTML('beforeend', '<li><a id="assProduction" class="dropdown-item" href="#new-production">Asignar producción</a></li>');
+        suboptions.insertAdjacentHTML('beforeend', '<li><a id="desProduction" class="dropdown-item" href="#rem-production">Desasignar producción</a></li>');
         menuOption.append(suboptions);
         this.menu.append(menuOption);
     }
 
     /**
-     * Enlazar manejador handleIterationByCategory con el evento
+     * Enlazar manejador con el evento
      */
-    bindAdminMenu(hNewProductionForm, hRemoveProduction) {
+    bindAdminMenu(hNewProductionForm, hRemoveProduction, hAssignProduction, hDeassignProduction) {
         const newProductionLink = document.getElementById('newProduction');
         newProductionLink.addEventListener('click', (event) => {
             this.#EXCECUTE_HANDLER(hNewProductionForm, [], '#new-production', { action: 'newProduction' }, '#', event);
@@ -968,10 +970,18 @@ class VideoSystemView {
         delProductionLink.addEventListener('click', (event) => {
             this.#EXCECUTE_HANDLER(hRemoveProduction, [], '#remove-production', { action: 'removeProduction' }, '#', event);
         });
+        const assignProductionLink = document.getElementById('assProduction');
+        assignProductionLink.addEventListener('click', (event) => {
+            this.#EXCECUTE_HANDLER(hAssignProduction, [], '#ass-production', { action: 'assProduction' }, '#', event);
+        });
+        const deassignProductionLink = document.getElementById('desProduction');
+        deassignProductionLink.addEventListener('click', (event) => {
+            this.#EXCECUTE_HANDLER(hDeassignProduction, [], '#des-production', { action: 'desProduction' }, '#', event);
+        });
     }
 
     /**
-     * Mostrar formulario producciones----------------------------------------------------------
+     * Mostrar formulario producciones
      */
     showNewProductionForm(categories, actors, directors) {
         // Limpiar contenido
@@ -1315,6 +1325,135 @@ class VideoSystemView {
                 event.preventDefault();
             });
         }
+    }
+
+    /**
+     * Mostrar formulario asignar producciones
+     */
+    showAssignProductionForm(productions, actors, directors) {
+        // Limpiar contenido
+        this.#emptyMain();
+
+        // Crear contenedor para la asignación
+        const container = document.createElement('div');
+        const h2 = document.createElement('h2');
+        h2.classList.add('h2', 'fw-bold', 'mb-4', 'border-start', 'border-5', 'border-black', 'ps-3', 'text-uppercase');
+        h2.innerHTML = 'Asignar producción';
+        container.append(h2);
+
+        const form = document.createElement('form');
+        form.name = 'fAssignProduction';
+        form.setAttribute('role', 'form');
+        form.setAttribute('novalidate', '');
+
+        // Sección producciones
+        form.insertAdjacentHTML('beforeend', ` 
+            <div class="mb-3">
+                <label class="form-label">Selecciona produccion</label>
+                <select class="form-select" id="acProduction" name="acProduction" required>
+                    <option value="" selected>Selecciona una producción...</option>
+                </select>
+                <div class="invalid-feedback">Selecciona al menos una producción.</div>
+                <div class="valid-feedback">Producción seleccionada.</div>
+            </div>
+        `);
+        // Obtener producciones
+        const acProduction = form.querySelector('#acProduction');
+        for (const prod of productions) {
+            acProduction.insertAdjacentHTML('beforeend', `<option value="${prod.title}">${prod.title}</option>`);
+        }
+
+        // Sección actores
+        form.insertAdjacentHTML('beforeend', ` 
+            <div class="mb-3">
+                <label class="form-label">Selecciona actores</label>
+                <select class="form-select" id="acActors" name="acActors" multiple required>
+                    
+                </select>
+                <div class="invalid-feedback">Selecciona actores.</div>
+                <div class="valid-feedback">Actores seleccionados.</div>
+            </div>
+        `);
+        // Obtener actores
+        const acActors = form.querySelector('#acActors');
+        for (const act of actors) {
+            const actor = act.actor;
+            acActors.insertAdjacentHTML('beforeend', `<option value="${actor.name}">${actor.name}</option>`);
+        }
+
+        // Sección directores
+        form.insertAdjacentHTML('beforeend', ` 
+            <div class="mb-3">
+                <label class="form-label">Selecciona directores</label>
+                <select class="form-select" id="acDirectors" name="acDirectors" multiple required>
+                    
+                </select>
+                <div class="invalid-feedback">Selecciona directores.</div>
+                <div class="valid-feedback">Directores seleccionados.</div>
+            </div>
+        `);
+        // Obtener directores
+        const acDirectors = form.querySelector('#acDirectors');
+        for (const dir of directors) {
+            const director = dir.director;
+            acDirectors.insertAdjacentHTML('beforeend', `<option value="${director.name}">${director.name}</option>`);
+        }
+
+        form.insertAdjacentHTML('beforeend', ` 
+                <button type="reset" class="btn btn-secondary">Limpiar</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">Guardar</button>
+        `);
+
+        container.append(form);
+        this.main.append(container);
+    }
+
+    /**
+     * Mostrar modal confirmación
+     */
+    showAssignProductionModal(done, production, error) {
+        // Contenedor modal
+        const messageModalContainer = document.getElementById('messageModal');
+        const messageModal = new bootstrap.Modal('#messageModal');
+
+        // Título
+        const title = document.getElementById('messageModalTitle');
+        title.innerHTML = done ? 'Produción asignada correctamente' : 'Error al asignar produción';
+
+        // Mensaje
+        const body = messageModalContainer.querySelector('.modal-body');
+        body.replaceChildren();
+        if (done) {
+            body.insertAdjacentHTML(
+                'afterbegin',
+                `<div class="p-3">La producción <strong>${production.title}</strong> ha sido asignada correctamente.</div>`
+            );
+        } else {
+            body.insertAdjacentHTML(
+                'afterbegin',
+                `<div class="error text-danger p-3">
+                <i class="bi bi-exclamation-triangle"></i>
+                La producción <strong>${production.title} - ${production.title}</strong> no ha podido asignar correctamente.
+                </div>`
+            );
+        }
+
+        // Mostrar modal
+        messageModal.show();
+
+        // Evento cerrar modal
+        messageModalContainer.addEventListener('hidden.bs.modal', () => {
+            if (done) document.fAssignProduction.reset();
+            document.fAssignProduction.acProduction.focus();
+        }, { once: true });
+    }
+
+    /**
+     * Enlazar manejador handleAssignProduction con validación
+     */
+    bindAssignProductionForm(handler) {
+        assignProductionValidation(handler);
     }
 }
 

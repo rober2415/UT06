@@ -166,4 +166,85 @@ function newProductionValidation(handler) {
     form.npSynopsis.addEventListener('change', defaultCheckElement);
 }
 
-export { newProductionValidation };
+/**
+ * Validar asignación producción
+ */
+function assignProductionValidation(handler) {
+    // Seleccionar formulario fAssignProduction
+    const form = document.forms.fAssignProduction;
+    // Anular validación HTML
+    form.setAttribute('novalidate', '');
+
+    // Evento submit
+    form.addEventListener('submit', function (event) {
+        let isValid = true;
+        let firstInvalidElement = null;
+
+        // Producciones
+        if (!this.acProduction.checkValidity()) {
+            isValid = false;
+            showFeedBack(this.acProduction, false);
+            firstInvalidElement = this.acProduction;
+        } else {
+            showFeedBack(this.acProduction, true);
+        }
+
+        // Actores
+        if (!this.acActors.checkValidity()) {
+            isValid = false;
+            showFeedBack(this.acActors, false);
+            firstInvalidElement = this.acActors;
+        } else {
+            showFeedBack(this.acActors, true);
+        }
+
+        // Directores
+        if (!this.acDirectors.checkValidity()) {
+            isValid = false;
+            showFeedBack(this.acDirectors, false);
+            firstInvalidElement = this.acDirectors;
+        } else {
+            showFeedBack(this.acDirectors, true);
+        }
+
+        // Comprobar validación
+        if (!isValid) {
+            // Focus sobre el primer error
+            firstInvalidElement.focus();
+        } else {
+            // Extraer valores select
+            const actors = [...this.acActors.selectedOptions].map(opt => opt.value);
+            const directors = [...this.acDirectors.selectedOptions].map(opt => opt.value);
+            // Ejecutar manejador
+            handler(
+                this.acProduction.value,
+                actors,
+                directors
+            );
+        }
+
+        // Evitar envío y recarga de formulario
+        event.preventDefault();
+        event.stopPropagation();
+    });
+
+    // Evento reset de validación
+    form.addEventListener('reset', (function (event) {
+        for (const div of this.querySelectorAll('div.valid-feedback, div.invalid-feedback')) {
+            div.classList.remove('d-block');
+            div.classList.add('d-none');
+        }
+        for (const input of this.querySelectorAll('select')) {
+            input.classList.remove('is-valid');
+            input.classList.remove('is-invalid');
+        }
+        this.acProduction.focus();
+    }));
+
+    // Eventos de validación
+    form.acProduction.addEventListener('change', defaultCheckElement);
+    form.acActors.addEventListener('change', defaultCheckElement);
+    form.acDirectors.addEventListener('change', defaultCheckElement);
+}
+
+export { newProductionValidation, assignProductionValidation };
