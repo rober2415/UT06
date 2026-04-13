@@ -133,7 +133,8 @@ class VideoSystemController {
         // Menú admin
         this.#VIEW.showAdminMenu();
         this.#VIEW.bindAdminMenu(
-            this.handleNewProductionForm
+            this.handleNewProductionForm,
+            this.handleRemoveProductionForm
         );
     }
 
@@ -454,6 +455,61 @@ class VideoSystemController {
         // Pasar el resultado al modal de la vista
         this.#VIEW.showNewProductionModal(done, production, error);
     };
+
+    /**
+     * Manejador mostrar el formulario de eliminar produccion
+     */
+    handleRemoveProductionForm = () => {
+        // Pasar el iterador del modelo a la vista
+        this.#VIEW.showRemoveProductionForm(this.#MODEL.getCategories());
+
+        // Enlazamos el cambio del filtro
+        this.#VIEW.bindRemoveProductionCategory((categoryName) => {
+
+            // Obtener categorías
+            const category = this.#MODEL.createCategory(categoryName);
+            // Obtener producciones por categoría
+            const productions = this.#MODEL.getProductionsCategory(category);
+
+            // Pasar producciones a la vista
+            this.#VIEW.showRemoveProductionForm2(productions);
+
+            // Pasar manejador al método para eliminar producción
+            this.#VIEW.bindRemoveProduction(this.handleRemoveProduction);
+        });
+    };
+
+    /**
+     * Manejador eliminar produccion
+     */
+    handleRemoveProduction = (title) => {
+        let done;
+        let error;
+        let production;
+
+        try {
+            // Obtener la producción
+            production = this.#MODEL.createProduction(title);
+
+            // Obtener categorías
+            const categories = this.#MODEL.getCategories();
+
+            // Desasignar la producción
+            for (const cat of categories) {
+                this.#MODEL.deassignCategory(cat.category, production);
+            }
+
+            // Eliminar la producción
+            this.#MODEL.removeProduction(production);
+
+            done = true;
+        } catch (exception) {
+            done = false;
+            error = exception;
+        }
+        // Pasar el resultado al modal de la vista
+        this.#VIEW.showRemoveProductionModal(done, production, error);
+    }
 
 }
 

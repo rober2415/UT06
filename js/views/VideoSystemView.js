@@ -951,6 +951,7 @@ class VideoSystemView {
         const suboptions = document.createElement('ul');
         suboptions.classList.add('dropdown-menu');
         suboptions.insertAdjacentHTML('beforeend', '<li><a id="newProduction" class="dropdown-item" href="#new-production">Crear producción</a></li>');
+        suboptions.insertAdjacentHTML('beforeend', '<li><a id="remProduction" class="dropdown-item" href="#rem-production">Eliminar producción</a></li>');
         menuOption.append(suboptions);
         this.menu.append(menuOption);
     }
@@ -958,10 +959,14 @@ class VideoSystemView {
     /**
      * Enlazar manejador handleIterationByCategory con el evento
      */
-    bindAdminMenu(hNewProductionForm) {
+    bindAdminMenu(hNewProductionForm, hRemoveProduction) {
         const newProductionLink = document.getElementById('newProduction');
         newProductionLink.addEventListener('click', (event) => {
             this.#EXCECUTE_HANDLER(hNewProductionForm, [], '#new-production', { action: 'newProduction' }, '#', event);
+        });
+        const delProductionLink = document.getElementById('remProduction');
+        delProductionLink.addEventListener('click', (event) => {
+            this.#EXCECUTE_HANDLER(hRemoveProduction, [], '#remove-production', { action: 'removeProduction' }, '#', event);
         });
     }
 
@@ -1165,6 +1170,151 @@ class VideoSystemView {
      */
     bindNewProductionForm(handler) {
         newProductionValidation(handler);
+    }
+
+    /**
+     * Genera el contenedor con el filtro de categorías
+     */
+    showRemoveProductionForm(categories) {
+        this.#emptyMain();
+
+        const container = document.createElement('div');
+        container.id = 'remove-production-container';
+        container.classList.add('container', 'my-3');
+
+        container.insertAdjacentHTML('afterbegin', `
+        <h2 class="h2 fw-bold mb-4 border-start border-5 border-black ps-3 text-uppercase">
+            Eliminar producción
+        </h2>
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <label class="form-label" for="rpCategories">Filtrar por Categoría</label>
+                <select class="form-select" id="rpCategories">
+                    <option value="" selected>Selecciona una categoría...</option>
+                </select>
+            </div>
+        </div>
+        <div id="production-list" class="row row-cols-1 row-cols-md-2 row-cols-lg-2 row-cols-xl-3 row-cols-xxl-4 g-4">
+        </div>
+    `);
+
+        // Selección de categoría
+        const select = container.querySelector('#rpCategories');
+        for (const catObj of categories) {
+            select.insertAdjacentHTML('beforeend', `<option value="${catObj.category.name}">${catObj.category.name}</option>`);
+        }
+
+        this.main.append(container);
+    }
+
+    /**
+     * Mostrar producciones borrar
+     */
+    showRemoveProductionForm2(productions) {
+        const productionList = document.getElementById('production-list');
+
+        productionList.replaceChildren();
+
+        let exist = false;
+        for (const prod of productions) {
+            exist = true;
+            // Usamos el título como identificador en el atributo data-title
+            productionList.insertAdjacentHTML('beforeend', `
+            <div class="col">
+                <figure class="card card-product-grid card-lg">
+                    <div class="img-wrap">
+                        <img src="${prod.image}" class="card-img-top" alt="${prod.title}" style="height: 300px; object-fit: cover;">
+                    </div>
+                    <figcaption class="info-wrap p-3">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h5 class="title">${prod.title}</h5>
+                                <p class="text-muted small">${prod.nationality} | ${prod.publication.getFullYear()}</p>
+                            </div>
+                        </div>
+                    </figcaption>
+                    <div class="bottom-wrap p-3 border-top">
+                        <button data-title="${prod.title}" class="btn btn-danger float-right">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </button>
+                    </div>
+                </figure>
+            </div>`);
+        }
+
+        // Sin producciones
+        if (!exist) {
+            row.insertAdjacentHTML('beforeend', `
+            <div class="col-12">
+                <p class="text-danger"><i class="bi bi-exclamation-triangle"></i> No existen producciones registradas en el sistema.</p>
+            </div>`);
+        }
+    }
+
+    /**
+     * Mostrar modal confirmación
+     */
+    showRemoveProductionModal(done, production, error) {
+        const productionList = document.getElementById('production-list');
+        const messageModalContainer = document.getElementById('messageModal');
+        const messageModal = new bootstrap.Modal('#messageModal');
+
+        const title = document.getElementById('messageModalTitle');
+        title.innerHTML = done ? 'Producción eliminada correctamente' : 'Error al eliminar producción';
+
+        const body = messageModalContainer.querySelector('.modal-body');
+        body.replaceChildren();
+
+        if (done) {
+            body.insertAdjacentHTML(
+                'afterbegin',
+                `<div class="p-3">La producción <strong>${production.title}</strong> ha sido eliminada correctamente.</div>`
+            );
+        } else {
+            body.insertAdjacentHTML(
+                'afterbegin',
+                `<div class="error text-danger p-3">
+                <i class="bi bi-exclamation-triangle"></i>
+                    No se pudo eliminar la producción.
+                </div>`
+            );
+        }
+
+        // Mostrar modal
+        messageModal.show();
+
+        const listener = (event) => {
+            if (done) {
+                const button = productionList.querySelector(`button[data-title="${production.title}"]`);
+                button.closest('.col').remove();
+            }
+        };
+        messageModalContainer.addEventListener('hidden.bs.modal', listener, { once: true });
+    }
+
+    /**
+     * Enlazar manejador handleRemoveProductionForm con el evento
+     */
+    bindRemoveProductionCategory(handler) {
+        const select = document.getElementById('rpCategories');
+        select.addEventListener('change', (event) => {
+            handler(event.target.value);
+        });
+    }
+
+    /**
+     * Enlazar manejador handleRemoveProduction con el evento
+     */
+    bindRemoveProduction(handler) {
+        const productionList = document.getElementById('production-list');
+        const buttons = productionList.querySelectorAll('button');
+
+        for (const but of buttons) {
+            but.addEventListener('click', function (event) {
+                handler(this.dataset.title);
+                event.preventDefault();
+            });
+        }
     }
 }
 
