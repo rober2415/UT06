@@ -13,6 +13,8 @@ import { Category } from "./Category.js";
 import { User } from "./User.js";
 import { Production } from "./Production.js";
 import { Person } from "./Person.js";
+import { Movie } from "./Movie.js";
+import { Serie } from "./Serie.js";
 
 class VideoSystem {
   // Propiedad para almacenar la instancia
@@ -582,13 +584,20 @@ class VideoSystem {
    * Devuelve un objeto Production si está registrado, o crea un nuevo
    * Si es nuevo NO lo añade al manager
    */
-  createProduction(title, nationality, publication, synopsis, image) {
+  createProduction(title, type, nationality, publication, synopsis, image, extra1, extra2, extra3) {
     for (const prod of this.#productions) {
       if (prod.title === title) {
         return prod;
       }
     }
-    return new Production(title, nationality, publication, synopsis, image);
+
+    if (type === 'Movie') {
+      return new Movie(title, nationality, publication, synopsis, image, extra1, extra2);
+    } else if (type === 'Serie') {
+      return new Serie(title, nationality, publication, synopsis, image, extra1, extra2, extra3);
+    } else {
+      return new Production(title, nationality, publication, synopsis, image);
+    }
   }
 
   /**

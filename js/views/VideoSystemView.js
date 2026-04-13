@@ -1,5 +1,9 @@
 "use strict";
 
+import { Movie } from '../models/Movie.js';
+import { Serie } from '../models/Serie.js';
+import { newProductionValidation } from './Validation.js';
+
 class VideoSystemView {
     constructor() {
         // Menú de navegación
@@ -254,16 +258,24 @@ class VideoSystemView {
             directores = "Sin directores";
         }
 
+        // Tipo
+        let tipo = "";
+        if (prod instanceof Movie) {
+            tipo = "Película";
+        } else if (prod instanceof Serie) {
+            tipo = "Serie";
+        }
+
         // Crear contenedor para los detalles
         const container = document.createElement('div');
         container.insertAdjacentHTML('beforeend', `
             <div class="row">
                 <div class="col-md-8">
                     <h2 class="h2 fw-bold mb-4 border-start border-5 border-black ps-3 text-uppercase">${prod.title}</h2>
-        
                     <div class="mb-4">
+                        <span class="badge bg-dark">${tipo}</span>
                         <span class="badge bg-secondary mb-2">${prod.nationality}</span>
-                        <span class="badge bg-outline-dark border text-dark mb-2 ms-2">
+                        <span class="badge bg-outline-dark border text-dark mb-2">
                             ${prod.publication.toLocaleDateString()}
                         </span>
                     </div>
@@ -654,6 +666,14 @@ class VideoSystemView {
             // Título página nueva
             this.newWindow.document.title = `Detalles de ${prod.title}`;
 
+            // Tipo
+            let tipo = "";
+            if (prod instanceof Movie) {
+                tipo = "Película";
+            } else if (prod instanceof Serie) {
+                tipo = "Serie";
+            }
+
             // Crear contenedor para los detalles de producción
             const container = this.newWindow.document.createElement('div');
             container.classList.add('container');
@@ -663,6 +683,7 @@ class VideoSystemView {
                         <h2 class="h2 fw-bold mb-4 border-start border-5 border-black ps-3 text-uppercase">${prod.title}</h2>
             
                         <div class="mb-4">
+                            <span class="badge bg-dark">${tipo}</span>
                             <span class="badge bg-secondary mb-2">${prod.nationality}</span>
                             <span class="badge bg-outline-dark border text-dark mb-2 ms-2">
                                 ${prod.publication.toLocaleDateString()}
@@ -915,6 +936,235 @@ class VideoSystemView {
                 handler();
             });
         }
+    }
+
+    /**
+     * Mostrar formulario modal producciones
+     */
+    showAdminMenu() {
+        const menuOption = document.createElement('li');
+        menuOption.classList.add('nav-item', 'dropdown', 'text-uppercase');
+        menuOption.insertAdjacentHTML(
+            'afterbegin',
+            '<a class="nav-link dropdown-toggle" href="#" id="navServices" role="button" data-bs-toggle="dropdown" aria-expanded="false">	Adminitración</a>',
+        );
+        const suboptions = document.createElement('ul');
+        suboptions.classList.add('dropdown-menu');
+        suboptions.insertAdjacentHTML('beforeend', '<li><a id="newProduction" class="dropdown-item" href="#new-production">Crear producción</a></li>');
+        menuOption.append(suboptions);
+        this.menu.append(menuOption);
+    }
+
+    /**
+     * Enlazar manejador handleIterationByCategory con el evento
+     */
+    bindAdminMenu(hNewProductionForm) {
+        const newProductionLink = document.getElementById('newProduction');
+        newProductionLink.addEventListener('click', (event) => {
+            this.#EXCECUTE_HANDLER(hNewProductionForm, [], '#new-production', { action: 'newProduction' }, '#', event);
+        });
+    }
+
+    /**
+     * Mostrar formulario producciones----------------------------------------------------------
+     */
+    showNewProductionForm(categories, actors, directors) {
+        // Limpiar contenido
+        this.#emptyMain();
+
+        // Crear contenedor
+        const container = document.createElement('div');
+        // Crear título
+        const h2 = document.createElement('h2');
+        h2.classList.add('h2', 'fw-bold', 'mb-4', 'border-start', 'border-5', 'border-black', 'ps-3', 'text-uppercase');
+        h2.innerHTML = 'Crear producción';
+        // Añadir título al final
+        container.append(h2);
+
+        // Crear formulario
+        const form = document.createElement('form');
+        form.name = 'fNewProduction';
+        form.setAttribute('role', 'form');
+        form.setAttribute('novalidate', '');
+
+        // Título
+        form.insertAdjacentHTML('beforeend', ` 
+                <div class="mb-3">
+                    <label class="form-label" for="npTitle">Título</label>
+                    <input type="text" class="form-control" id="npTitle" name="npTitle" required>
+                    <div class="invalid-feedback">El título es obligatorio.</div>
+                    <div class="valid-feedback">¡Título correcto!</div>
+                </div>
+        `);
+
+        // Tipo
+        form.insertAdjacentHTML('beforeend', ` 
+                <div class="mb-3">
+                    <label class="form-label">Tipo</label><br>
+
+                    <input type="radio" id="npMovie" name="npType" value="Movie" required>
+                    <label for="npMovie">Pelicula</label>
+
+                    <input type="radio" id="npSerie" name="npType" value="Serie">
+                    <label for="npSerie">Serie</label><br>
+
+                    <div class="invalid-feedback">Selecciona al menos un tipo.</div>
+                    <div class="valid-feedback">Tipo seleccionado.</div>
+                </div>
+        `);
+
+        // Categorías
+        form.insertAdjacentHTML('beforeend', ` 
+                <div class="mb-3">
+                    <label class="form-label">Categorías</label>
+                    <select class="form-select" id="npCategories" name="npCategories" multiple required>
+                        
+                    </select>
+                    <div class="invalid-feedback">Selecciona al menos una categoría.</div>
+                    <div class="valid-feedback">Categorías seleccionadas.</div>
+                </div>
+        `);
+        // Mostrar categorías
+        const npCategories = form.querySelector('#npCategories');
+        for (const cat of categories) {
+            const category = cat.category;
+            npCategories.insertAdjacentHTML('beforeend', `<option value="${category.name}">${category.name}</option>`);
+        }
+
+        // Actores
+        form.insertAdjacentHTML('beforeend', ` 
+                <div class="mb-3">
+                    <label class="form-label">Actores</label>
+                    <select class="form-select" id="npActors" name="npActors" multiple required>
+                        
+                    </select>
+                    <div class="invalid-feedback">Selecciona al menos un actor.</div>
+                    <div class="valid-feedback">Actores seleccionados.</div>
+                </div>
+        `);
+        // Mostrar actores
+        const npActors = form.querySelector('#npActors');
+        for (const act of actors) {
+            const actor = act.actor;
+            npActors.insertAdjacentHTML('beforeend', `<option value="${actor.name}">${actor.name}</option>`);
+        }
+
+        // Directores
+        form.insertAdjacentHTML('beforeend', ` 
+                <div class="mb-3">
+                    <label class="form-label">Directores</label>
+                    <select class="form-select" id="npDirectors" name="npDirectors" multiple required>
+                        
+                    </select>
+                    <div class="invalid-feedback">Selecciona al menos un director.</div>
+                    <div class="valid-feedback">Directores seleccionados.</div>
+                </div>
+        `);
+        // Mostrar Directores
+        const npDirectors = form.querySelector('#npDirectors');
+        for (const dir of directors) {
+            const director = dir.director;
+            npDirectors.insertAdjacentHTML('beforeend', `<option value="${director.name}">${director.name}</option>`);
+        }
+
+        // Nacionalidad
+        form.insertAdjacentHTML('beforeend', ` 
+                <div class="mb-3">
+                    <label class="form-label" for="npNationality">Nacionalidad</label>
+                    <input type="text" class="form-control" id="npNationality" name="npNationality" required>
+                    <div class="invalid-feedback">La nacionalidad es obligatoria.</div>
+                    <div class="valid-feedback">Correcto.</div>
+                </div>
+        `);
+
+        // Fecha de publicación
+        form.insertAdjacentHTML('beforeend', ` 
+                <div class="mb-3">
+                    <label class="form-label" for="npPubDate">Fecha Publicación</label>
+                    <input type="date" class="form-control" id="npPubDate" name="npPubDate" required>
+                    <div class="invalid-feedback">Selecciona una fecha válida.</div>
+                    <div class="valid-feedback">Fecha correcta.</div>
+                </div>
+        `);
+
+        // Imagen
+        form.insertAdjacentHTML('beforeend', ` 
+                <div class="mb-3">
+                    <label class="form-label" for="npImage">Imagen</label>
+                    <input type="url" class="form-control" id="npImage" name="npImage" required>
+                    <div class="invalid-feedback">Introduce una URL válida.</div>
+                    <div class="valid-feedback">Correcto.</div>
+                </div>
+        `);
+
+        // Sinopsis
+        form.insertAdjacentHTML('beforeend', ` 
+                <div class="mb-3">
+                    <label class="form-label" for="npSynopsis">Sinopsis</label>
+                    <textarea class="form-control" id="npSynopsis" name="npSynopsis" rows="3"></textarea>
+                    <div class="valid-feedback">Opcional.</div>
+                </div>
+        `);
+
+        // Botones
+        form.insertAdjacentHTML('beforeend', ` 
+                <button type="reset" class="btn btn-secondary">Limpiar</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">Guardar</button>
+
+        `);
+
+        // Añadir formulario al final del contenedor
+        container.append(form);
+        // Añadir contenedor al final
+        this.main.append(container);
+    }
+
+    /**
+     * Mostrar modal confirmación
+     */
+    showNewProductionModal(done, production, error) {
+        // Contenedor modal
+        const messageModalContainer = document.getElementById('messageModal');
+        const messageModal = new bootstrap.Modal('#messageModal');
+
+        // Título
+        const title = document.getElementById('messageModalTitle');
+        title.innerHTML = done ? 'Producción creada correctamente' : 'Error al crear producción';
+
+        // Mensaje
+        const body = messageModalContainer.querySelector('.modal-body');
+        body.replaceChildren();
+        if (done) {
+            body.insertAdjacentHTML(
+                'afterbegin',
+                `<div class="p-3">La producción <strong>${production.title}</strong> ha sido creada correctamente.</div>`
+            );
+        } else {
+            body.insertAdjacentHTML(
+                'afterbegin',
+                `<div class="error text-danger p-3">
+                <i class="bi bi-exclamation-triangle"></i>
+                La producción <strong>${production.title} - ${production.title}</strong> no ha podido crearse correctamente.
+                </div>`
+            );
+        }
+
+        // Mostrar modal
+        messageModal.show();
+
+        // Evento cerrar modal
+        messageModalContainer.addEventListener('hidden.bs.modal', () => {
+            if (done) document.fNewProduction.reset();
+            document.fNewProduction.npTitle.focus();
+        }, { once: true });
+    }
+
+    /**
+     * Enlazar manejador handleCreateProduction con la validación
+     */
+    bindNewProductionForm(handler) {
+        newProductionValidation(handler);
     }
 }
 
