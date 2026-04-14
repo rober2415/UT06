@@ -143,7 +143,7 @@ function newProductionValidation(handler) {
             const actors = [...this.npActors.selectedOptions].map(o => o.value);
             const directors = [...this.npDirectors.selectedOptions].map(o => o.value);
 
-            // Localizaciones → array
+            // Localizaciones (array)
             const locations = this.npLocation.value
                 ? this.npLocation.value.split(',').map(l => l.trim())
                 : [];
