@@ -57,12 +57,19 @@ function newProductionValidation(handler) {
         } else showFeedBack(this.npTitle, true);
 
         // Tipo
-        if (!this.npType.value) { // Si no hay radio seleccionado, value es ""
+        if (!this.npType.checkValidity()) {
             isValid = false;
-            showFeedBack(this.querySelector('#npMovie'), false); // Aplicamos error al primer radio
-            if (!firstInvalidElement) firstInvalidElement = this.querySelector('#npMovie');
-        } else {
-            showFeedBack(this.querySelector('#npMovie'), true);
+            showFeedBack(this.npType, false);
+            firstInvalidElement = this.npType;
+        } else showFeedBack(this.npType, true);
+
+        // Si es Serie
+        if (this.npType.value === "Serie") {
+            if (!this.npSeasons.checkValidity()) {
+                isValid = false;
+                showFeedBack(this.npSeasons, false);
+                if (!firstInvalidElement) firstInvalidElement = this.npSeasons;
+            } else showFeedBack(this.npSeasons, true);
         }
 
         // Categorías
@@ -107,6 +114,20 @@ function newProductionValidation(handler) {
             if (!firstInvalidElement) firstInvalidElement = this.npImage;
         } else showFeedBack(this.npImage, true);
 
+        // Recurso
+        if (!this.npResource.checkValidity()) {
+            isValid = false;
+            showFeedBack(this.npResource, false);
+            if (!firstInvalidElement) firstInvalidElement = this.npResource;
+        } else showFeedBack(this.npResource, true);
+
+        // Lozalización
+        if (!this.npLocation.checkValidity()) {
+            isValid = false;
+            showFeedBack(this.npLocation, false);
+            if (!firstInvalidElement) firstInvalidElement = this.npLocation;
+        } else showFeedBack(this.npLocation, true);
+
         // Eliminar espacios
         this.npSynopsis.value = this.npSynopsis.value.trim();
         // Marcar sinopsys como válida (opcional)
@@ -122,6 +143,26 @@ function newProductionValidation(handler) {
             const actors = [...this.npActors.selectedOptions].map(o => o.value);
             const directors = [...this.npDirectors.selectedOptions].map(o => o.value);
 
+            // Localizaciones → array
+            const locations = this.npLocation.value
+                ? this.npLocation.value.split(',').map(l => l.trim())
+                : [];
+
+            // Movie → resource (string)
+            const resource = this.npType.value === "Movie"
+                ? this.npResource.value
+                : null;
+
+            // Serie → resources (array)
+            const resources = this.npType.value === "Serie"
+                ? this.npResource.value.split(',').map(r => r.trim())
+                : null;
+
+            // Temporadas
+            const seasons = this.npType.value === "Serie"
+                ? this.npSeasons.value
+                : null;
+
             // Ejecutar manejador
             handler(
                 this.npTitle.value,
@@ -130,10 +171,14 @@ function newProductionValidation(handler) {
                 new Date(this.npPubDate.value),
                 this.npSynopsis.value,
                 this.npImage.value,
+                this.npType.value === "Movie" ? resource : resources,
+                locations,
+                seasons,
                 categories,
                 actors,
                 directors
             );
+
         }
 
         // Evitar envío y recarga de formulario
@@ -156,7 +201,6 @@ function newProductionValidation(handler) {
 
     // Eventos de validación
     form.npTitle.addEventListener('change', defaultCheckElement);
-    form.npTitle.addEventListener('change', defaultCheckElement);
     form.npNationality.addEventListener('change', defaultCheckElement);
     form.npPubDate.addEventListener('change', defaultCheckElement);
     form.npImage.addEventListener('change', defaultCheckElement);
@@ -164,6 +208,8 @@ function newProductionValidation(handler) {
     form.npActors.addEventListener('change', defaultCheckElement);
     form.npDirectors.addEventListener('change', defaultCheckElement);
     form.npSynopsis.addEventListener('change', defaultCheckElement);
+    form.npResource.addEventListener('change', defaultCheckElement);
+    form.npLocation.addEventListener('change', defaultCheckElement);
 }
 
 /**

@@ -584,7 +584,7 @@ class VideoSystem {
    * Devuelve un objeto Production si está registrado, o crea un nuevo
    * Si es nuevo NO lo añade al manager
    */
-  createProduction(title, type, nationality, publication, synopsis, image, extra1, extra2, extra3) {
+  createProduction(title, type, nationality, publication, synopsis, image, resource, locations, seasons) {
     for (const prod of this.#productions) {
       if (prod.title === title) {
         return prod;
@@ -592,11 +592,9 @@ class VideoSystem {
     }
 
     if (type === 'Movie') {
-      return new Movie(title, nationality, publication, synopsis, image, extra1, extra2);
+      return new Movie(title, nationality, publication, synopsis, image, resource, locations);
     } else if (type === 'Serie') {
-      return new Serie(title, nationality, publication, synopsis, image, extra1, extra2, extra3);
-    } else {
-      return new Production(title, nationality, publication, synopsis, image);
+      return new Serie(title, nationality, publication, synopsis, image, resource, locations, seasons);
     }
   }
 

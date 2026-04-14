@@ -419,14 +419,14 @@ class VideoSystemController {
     /**
      * Manejador crear produccion
      */
-    handleCreateProduction = (title, type, nationality, publication, synopsis, image, categories, actors, directors) => {
+    handleCreateProduction = (title, type, nationality, publication, synopsis, image, resource, location, seasons, categories, actors, directors) => {
         let done;
         let error;
         let production;
 
         try {
             // Crear producción
-            production = this.#MODEL.createProduction(title, type, nationality, publication, synopsis, image);
+            production = this.#MODEL.createProduction(title, type, nationality, publication, synopsis, image, resource, location, seasons);
             // Añadir producción
             this.#MODEL.addProduction(production);
 

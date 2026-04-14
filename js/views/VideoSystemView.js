@@ -1014,18 +1014,26 @@ class VideoSystemView {
 
         // Tipo
         form.insertAdjacentHTML('beforeend', ` 
-                <div class="mb-3">
-                    <label class="form-label">Tipo</label><br>
+            <div class="mb-3">
+                <label class="form-label" for="npType">Tipo</label>
+                <select class="form-select" id="npType" name="npType" required>
+                    <option value="">Selecciona tipo...</option>
+                    <option value="Movie">Película</option>
+                    <option value="Serie">Serie</option>
+                </select>
+                <div class="invalid-feedback">Selecciona un tipo.</div>
+                <div class="valid-feedback">Título correcto.</div>
+            </div>
+        `);
 
-                    <input type="radio" id="npMovie" name="npType" value="Movie" required>
-                    <label for="npMovie">Pelicula</label>
-
-                    <input type="radio" id="npSerie" name="npType" value="Serie">
-                    <label for="npSerie">Serie</label><br>
-
-                    <div class="invalid-feedback">Selecciona al menos un tipo.</div>
-                    <div class="valid-feedback">Tipo seleccionado.</div>
-                </div>
+        // Temporadas (Campos específicos serie)
+        form.insertAdjacentHTML('beforeend', `
+            <div id="serieFields" style="display:none;">
+                <label class="form-label mt-2" for="npSeasons">Temporadas</label>
+                <input type="number" class="form-control" id="npSeasons" name="npSeasons" required>
+                <div class="invalid-feedback">Las temporadas es obligatorio.</div>
+                    <div class="valid-feedback">Temporadas correcto.</div>
+            </div>
         `);
 
         // Categorías
@@ -1075,7 +1083,7 @@ class VideoSystemView {
                     <div class="valid-feedback">Directores seleccionados.</div>
                 </div>
         `);
-        // Mostrar Directores
+        // Mostrar directores
         const npDirectors = form.querySelector('#npDirectors');
         for (const dir of directors) {
             const director = dir.director;
@@ -1121,13 +1129,44 @@ class VideoSystemView {
                 </div>
         `);
 
+        // Recursos
+        form.insertAdjacentHTML('beforeend', `
+            <div class="mb-3">
+                <label class="form-label" for="npResource">Recurso</label>
+                <input type="text" class="form-control" id="npResource" name="npResource" required>
+                <div class="invalid-feedback">Recursos es obligatorio.</div>
+                <div class="valid-feedback">Recursos correcto.</div>
+            </div>
+        `);
+
+        // Localizaciones
+        form.insertAdjacentHTML('beforeend', `
+            <div class="mb-3">
+                <label class="form-label" for="npLocation">Localización</label>
+                <input type="text" class="form-control" id="npLocation" name="npLocation" required>
+                <div class="invalid-feedback">La localización es obligatoria.</div>
+                <div class="valid-feedback">Localización correcta.</div>
+            </div>
+        `);
+
         // Botones
         form.insertAdjacentHTML('beforeend', ` 
                 <button type="reset" class="btn btn-secondary">Limpiar</button>
                 <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
                 <button type="submit" class="btn btn-success">Guardar</button>
-
         `);
+
+        // Eventos selección producción
+        const typeSelect = form.querySelector('#npType');
+        const serieFields = form.querySelector('#serieFields');
+
+        typeSelect.addEventListener('change', () => {
+            if (typeSelect.value === 'Serie') {
+                serieFields.style.display = 'block';
+            } else {
+                serieFields.style.display = 'none';
+            }
+        });
 
         // Añadir formulario al final del contenedor
         container.append(form);
