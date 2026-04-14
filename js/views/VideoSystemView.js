@@ -939,7 +939,7 @@ class VideoSystemView {
     }
 
     /**
-     * Mostrar formulario modal producciones
+     * Mostrar opciones admin
      */
     showAdminMenu() {
         const menuOption = document.createElement('li');
@@ -959,7 +959,7 @@ class VideoSystemView {
     }
 
     /**
-     * Enlazar manejador con el evento
+     * Enlazar manejador admin con el evento
      */
     bindAdminMenu(hNewProductionForm, hRemoveProduction, hAssignProduction, hDeassignProduction) {
         const newProductionLink = document.getElementById('newProduction');
@@ -1008,7 +1008,7 @@ class VideoSystemView {
                     <label class="form-label" for="npTitle">Título</label>
                     <input type="text" class="form-control" id="npTitle" name="npTitle" required>
                     <div class="invalid-feedback">El título es obligatorio.</div>
-                    <div class="valid-feedback">¡Título correcto!</div>
+                    <div class="valid-feedback">Título correcto.</div>
                 </div>
         `);
 
@@ -1088,7 +1088,7 @@ class VideoSystemView {
                     <label class="form-label" for="npNationality">Nacionalidad</label>
                     <input type="text" class="form-control" id="npNationality" name="npNationality" required>
                     <div class="invalid-feedback">La nacionalidad es obligatoria.</div>
-                    <div class="valid-feedback">Correcto.</div>
+                    <div class="valid-feedback">Nacionalidad correcta.</div>
                 </div>
         `);
 
@@ -1108,7 +1108,7 @@ class VideoSystemView {
                     <label class="form-label" for="npImage">Imagen</label>
                     <input type="url" class="form-control" id="npImage" name="npImage" required>
                     <div class="invalid-feedback">Introduce una URL válida.</div>
-                    <div class="valid-feedback">Correcto.</div>
+                    <div class="valid-feedback">Imagen correcta.</div>
                 </div>
         `);
 
@@ -1186,12 +1186,15 @@ class VideoSystemView {
      * Genera el contenedor con el filtro de categorías
      */
     showRemoveProductionForm(categories) {
+        // Limpiar contenido
         this.#emptyMain();
 
+        // Crear contenedor
         const container = document.createElement('div');
         container.id = 'remove-production-container';
-        container.classList.add('container', 'my-3');
+        container.classList.add('container');
 
+        // Crear formulario
         container.insertAdjacentHTML('afterbegin', `
         <h2 class="h2 fw-bold mb-4 border-start border-5 border-black ps-3 text-uppercase">
             Eliminar producción
@@ -1223,12 +1226,13 @@ class VideoSystemView {
     showRemoveProductionForm2(productions) {
         const productionList = document.getElementById('production-list');
 
+        // Limpiar contenido
         productionList.replaceChildren();
 
         let exist = false;
         for (const prod of productions) {
             exist = true;
-            // Usamos el título como identificador en el atributo data-title
+            // Crear formulario
             productionList.insertAdjacentHTML('beforeend', `
             <div class="col">
                 <figure class="card card-product-grid card-lg">
@@ -1265,16 +1269,18 @@ class VideoSystemView {
      * Mostrar modal confirmación
      */
     showRemoveProductionModal(done, production, error) {
+        // Contenedor modal
         const productionList = document.getElementById('production-list');
         const messageModalContainer = document.getElementById('messageModal');
         const messageModal = new bootstrap.Modal('#messageModal');
 
+        // Título
         const title = document.getElementById('messageModalTitle');
         title.innerHTML = done ? 'Producción eliminada correctamente' : 'Error al eliminar producción';
 
+        // Mensaje
         const body = messageModalContainer.querySelector('.modal-body');
         body.replaceChildren();
-
         if (done) {
             body.insertAdjacentHTML(
                 'afterbegin',
@@ -1293,6 +1299,7 @@ class VideoSystemView {
         // Mostrar modal
         messageModal.show();
 
+        // Evento cerrar modal
         const listener = (event) => {
             if (done) {
                 const button = productionList.querySelector(`button[data-title="${production.title}"]`);
@@ -1463,42 +1470,43 @@ class VideoSystemView {
         // Limpiar contenido
         this.#emptyMain();
         const container = document.createElement('div');
-        container.classList.add('container', 'my-3');
-        container.innerHTML = `<h2 class="h2 fw-bold mb-4 border-start border-5 border-black ps-3 text-uppercase">Desasignar Categoría</h2>`;
+        container.classList.add('container');
+        container.innerHTML = `<h2 class="h2 fw-bold mb-4 border-start border-5 border-black ps-3 text-uppercase">Desasignar producción</h2>`;
 
         const form = document.createElement('form');
         form.name = 'fDeassignProduction';
         form.setAttribute('novalidate', '');
 
+        // *He desabilitado required para dar la flexibilidad de desasignar un actor o un director
         form.innerHTML = `
         <div class="mb-3">
-            <label class="form-label">Categoría Origen</label>
+            <label class="form-label">Producción</label>
             <select class="form-select" id="dcProduction" name="dcProduction" required>
-                
+                <option value="" hidden>Selecciona una producción...</option>
             </select>
             <div class="invalid-feedback">Selecciona una producción.</div>
-            <div class="valid-feedback">Correcto.</div>
+            <div class="valid-feedback">Producción seleccionada.</div>
         </div>
         <div class="mb-3">
             <label class="form-label">Actores asignados</label>
-            <select class="form-select" id="dcActors" name="dcActors" multiple required>
+            <select class="form-select" id="dcActors" name="dcActors" multiple>
                 <option value="">Selecciona primero una producción...</option>
             </select>
             <div class="invalid-feedback">Selecciona al menos un actor para eliminar.</div>
-            <div class="valid-feedback">Correcto.</div>
+            <div class="valid-feedback">Actor seleccionado.</div>
         </div>
         <div class="mb-3">
             <label class="form-label">Directores asignados</label>
-            <select class="form-select" id="dcDirectors" name="dcDirectors" multiple required>
+            <select class="form-select" id="dcDirectors" name="dcDirectors" multiple>
                 <option value="">Selecciona primero una producción...</option>
             </select>
             <div class="invalid-feedback">Selecciona al menos un director para eliminar.</div>
-            <div class="valid-feedback">Correcto.</div>
+            <div class="valid-feedback">Director seleccionado.</div>
         </div>
         <button type="submit" class="btn btn-danger">Desasignar</button>
         <button type="reset" class="btn btn-secondary">Limpiar</button>
     `;
-        // Mostrar categorías
+        // Mostrar producciones
         const dcProduction = form.querySelector('#dcProduction');
         for (const prod of productions) {
             dcProduction.insertAdjacentHTML('beforeend', `<option value="${prod.title}">${prod.title}</option>`);
@@ -1515,7 +1523,7 @@ class VideoSystemView {
         const dcActors = document.getElementById('dcActors');
         // Limpiar contenido
         dcActors.replaceChildren();
-        // Mostrar producciones
+        // Mostrar actores
         for (const act of actors) {
             dcActors.insertAdjacentHTML('beforeend', `<option value="${act}">${act}</option>`);
         }
@@ -1523,7 +1531,7 @@ class VideoSystemView {
         const dcDirectors = document.getElementById('dcDirectors');
         // Limpiar contenido
         dcDirectors.replaceChildren();
-        // Mostrar producciones
+        // Mostrar directores
         for (const dir of directors) {
             dcDirectors.insertAdjacentHTML('beforeend', `<option value="${dir}">${dir}</option>`);
         }

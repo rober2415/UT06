@@ -32,6 +32,10 @@ class VideoSystemController {
             productionDetail: (state) => this.handleShowProductionDetail(state.production),
             actorDetail: (state) => this.handleShowActorDetail(state.actor),
             directorDetail: (state) => this.handleShowDirectorDetail(state.director),
+            newProduction: () => this.handleNewProductionForm(),
+            removeProduction: () => this.handleRemoveProductionForm(),
+            assProduction: () =>this.handleAssignProductionForm(),
+            desProduction: () =>this.handleDeassignProductionForm()
         };
 
         // Restaurar estado página
@@ -495,10 +499,23 @@ class VideoSystemController {
 
             // Obtener categorías
             const categories = this.#MODEL.getCategories();
-
             // Desasignar la producción
             for (const cat of categories) {
                 this.#MODEL.deassignCategory(cat.category, production);
+            }
+
+            // Obtener actores
+            const actors = this.#MODEL.getActors();
+            // Desasignar la actor
+            for (const act of actors) {
+                this.#MODEL.deassignActor(act.actor, production);
+            }
+
+            // Obtener directores
+            const directors = this.#MODEL.getDirectors();
+            // Desasignar la director
+            for (const dir of directors) {
+                this.#MODEL.deassignDirector(dir.director, production);
             }
 
             // Eliminar la producción
@@ -567,14 +584,14 @@ class VideoSystemController {
     };
 
     /**
-     * Manejador mostrar formulario desasignar categoría
+     * Manejador mostrar formulario desasignar producción
      */
     handleDeassignProductionForm = () => {
-        // Pasar categorías del modelo a la vista
+        // Pasar producciones del modelo a la vista
         this.#VIEW.showDeassignProductionForm(this.#MODEL.getProductions());
-        // Pasar manejador al método para actualizar producciones de categorías
+        // Pasar manejador al método para actualizar actores y directores de producciones
         this.#VIEW.bindUpdateDeassignProductions(this.handleUpdateDeassignList);
-        // Pasar manejador al método para desasignar categoría
+        // Pasar manejador al método para desasignar producción
         this.#VIEW.bindDeassignProductionForm(this.handleDeassignProduction);
     };
 
