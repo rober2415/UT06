@@ -295,7 +295,7 @@ function assignProductionValidation(handler) {
 }
 
 /**
- * Validación para el formulario de desasignar categorías
+ * Validación para el formulario de desasignar producción
  */
 function deassignProductionValidation(handler) {
     // Seleccionar formulario fDeassignProduction
@@ -308,7 +308,7 @@ function deassignProductionValidation(handler) {
         let isValid = true;
         let firstInvalidElement = null;
 
-        // Producciones
+        // Produccion
         if (!this.dcProduction.checkValidity()) {
             isValid = false;
             showFeedBack(this.dcProduction, false);
@@ -317,37 +317,39 @@ function deassignProductionValidation(handler) {
             showFeedBack(this.dcProduction, true);
         }
 
-        // Actores
-        if (!this.dcActors.checkValidity()) {
-            isValid = false;
-            showFeedBack(this.dcActors, false);
-            firstInvalidElement = this.dcActors;
-        } else {
-            showFeedBack(this.dcActors, true);
-        }
+    // Obtener selecciones
+        const selectedActors = [...this.dcActors.selectedOptions].map(opt => opt.value);
+        const selectedDirectors = [...this.dcDirectors.selectedOptions].map(opt => opt.value);
 
-        // Directores
-        if (!this.dcDirectors.checkValidity()) {
+        // Validación: al menos uno de los dos
+        if (selectedActors.length === 0 && selectedDirectors.length === 0) {
             isValid = false;
+
+            showFeedBack(this.dcActors, false);
             showFeedBack(this.dcDirectors, false);
-            firstInvalidElement = this.dcDirectors;
+
+            if (!firstInvalidElement) firstInvalidElement = this.dcActors;
         } else {
-            showFeedBack(this.dcDirectors, true);
+            // Si hay actores → marcar actores como válidos
+            if (selectedActors.length > 0) {
+                showFeedBack(this.dcActors, true);
+            }
+
+            // Si hay directores → marcar directores como válidos
+            if (selectedDirectors.length > 0) {
+                showFeedBack(this.dcDirectors, true);
+            }
         }
 
         // Comprobar validación
         if (!isValid) {
-            // Focus sobre el primer error
             firstInvalidElement.focus();
         } else {
-            // Extraer valores select
-            const actors = [...this.dcActors.selectedOptions].map(opt => opt.value);
-            const directors = [...this.dcDirectors.selectedOptions].map(opt => opt.value);
             // Ejecutar manejador
             handler(
                 this.dcProduction.value,
-                actors,
-                directors
+                selectedActors,
+                selectedDirectors
             );
         }
 

@@ -1569,7 +1569,7 @@ class VideoSystemView {
         </div>
         <div class="mb-3">
             <label class="form-label">Actores asignados</label>
-            <select class="form-select" id="dcActors" name="dcActors" multiple>
+            <select class="form-select" id="dcActors" name="dcActors" multiple required>
                 <option value="">Selecciona primero una producción...</option>
             </select>
             <div class="invalid-feedback">Selecciona al menos un actor para eliminar.</div>
@@ -1577,7 +1577,7 @@ class VideoSystemView {
         </div>
         <div class="mb-3">
             <label class="form-label">Directores asignados</label>
-            <select class="form-select" id="dcDirectors" name="dcDirectors" multiple>
+            <select class="form-select" id="dcDirectors" name="dcDirectors" multiple required>
                 <option value="">Selecciona primero una producción...</option>
             </select>
             <div class="invalid-feedback">Selecciona al menos un director para eliminar.</div>
