@@ -317,11 +317,11 @@ function deassignProductionValidation(handler) {
             showFeedBack(this.dcProduction, true);
         }
 
-    // Obtener selecciones
+        // Obtener selecciones
         const selectedActors = [...this.dcActors.selectedOptions].map(opt => opt.value);
         const selectedDirectors = [...this.dcDirectors.selectedOptions].map(opt => opt.value);
 
-        // Validación: al menos uno de los dos
+        // Comprobar al menos uno de los dos
         if (selectedActors.length === 0 && selectedDirectors.length === 0) {
             isValid = false;
 
@@ -330,12 +330,12 @@ function deassignProductionValidation(handler) {
 
             if (!firstInvalidElement) firstInvalidElement = this.dcActors;
         } else {
-            // Si hay actores → marcar actores como válidos
+            // Si hay actores marcar actores como válidos
             if (selectedActors.length > 0) {
                 showFeedBack(this.dcActors, true);
             }
 
-            // Si hay directores → marcar directores como válidos
+            // Si hay directores marcar directores como válidos
             if (selectedDirectors.length > 0) {
                 showFeedBack(this.dcDirectors, true);
             }
