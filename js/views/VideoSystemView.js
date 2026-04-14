@@ -1195,7 +1195,6 @@ class VideoSystemView {
         // Botones
         form.insertAdjacentHTML('beforeend', ` 
                 <button type="reset" class="btn btn-secondary">Limpiar</button>
-                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
                 <button type="submit" class="btn btn-success">Guardar</button>
         `);
 
@@ -1490,7 +1489,6 @@ class VideoSystemView {
 
         form.insertAdjacentHTML('beforeend', ` 
                 <button type="reset" class="btn btn-secondary">Limpiar</button>
-                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
                 <button type="submit" class="btn btn-success">Guardar</button>
         `);
 
