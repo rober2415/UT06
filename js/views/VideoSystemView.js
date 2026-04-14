@@ -258,12 +258,18 @@ class VideoSystemView {
             directores = "Sin directores";
         }
 
-        // Tipo
+        // Tipo y temporadas
         let tipo = "";
+        let resource = "";
+        let seasons = "";
         if (prod instanceof Movie) {
             tipo = "Película";
+            resource = prod.resource;
+            seasons = "Sin temporadas";
         } else if (prod instanceof Serie) {
             tipo = "Serie";
+            resource = prod.resources;
+            seasons = prod.seasons;
         }
 
         // Crear contenedor para los detalles
@@ -288,6 +294,9 @@ class VideoSystemView {
                     <ul>
                         <li><strong>Dirección:</strong> <div class="d-inline-block">${directores}</div></li>
                         <li><strong>Reparto:</strong> <div class="d-inline-block">${actors}</div></li>
+                        <li><strong>Recurso:</strong> <div class="d-inline-block">${resource}</div></li>
+                        <li><strong>Localización:</strong> <div class="d-inline-block">${prod.locations}</div></li>
+                        <li><strong>Temporadas:</strong> <div class="d-inline-block">${seasons}</div></li>
                     </ul>
 
                     <div class="mt-4">
@@ -653,7 +662,7 @@ class VideoSystemView {
     /**
     * Mostrar producción en ventana nueva
     */
-    showProductionInNewWindow(prod) {
+    showProductionInNewWindow(prod, actNames, dirNames) {
         // Acceder al main y header de la ventana hija
         const main = this.newWindow.document.querySelector('main');
         const header = this.newWindow.document.querySelector('header nav');
@@ -666,12 +675,38 @@ class VideoSystemView {
             // Título página nueva
             this.newWindow.document.title = `Detalles de ${prod.title}`;
 
-            // Tipo
+            // Crear enlaces para los actores
+            let actors = "";
+            if (actNames.length > 0) {
+                for (const actName of actNames) {
+                    actors += `<span class="badge bg-secondary">${actName} </span>`;
+                }
+            } else {
+                actors = "Sin actores";
+            }
+
+            // Crear enlaces para los directores
+            let directores = "";
+            if (dirNames.length > 0) {
+                for (const dirName of dirNames) {
+                    directores += `<span class="badge bg-secondary">${dirName}</span> `;
+                }
+            } else {
+                directores = "Sin directores";
+            }
+
+            // Tipo y temporadas
             let tipo = "";
+            let resource = "";
+            let seasons = "";
             if (prod instanceof Movie) {
                 tipo = "Película";
+                resource = prod.resource;
+                seasons = "Sin temporadas";
             } else if (prod instanceof Serie) {
                 tipo = "Serie";
+                resource = prod.resources;
+                seasons = prod.seasons;
             }
 
             // Crear contenedor para los detalles de producción
@@ -694,6 +729,14 @@ class VideoSystemView {
                         <p class="text-muted">${prod.synopsis}</p>
 
                         <hr class="my-4">
+
+                        <ul>
+                            <li><strong>Dirección:</strong> <div class="d-inline-block">${directores}</div></li>
+                            <li><strong>Reparto:</strong> <div class="d-inline-block">${actors}</div></li>
+                            <li><strong>Recurso:</strong> <div class="d-inline-block">${resource}</div></li>
+                            <li><strong>Localización:</strong> <div class="d-inline-block">${prod.locations}</div></li>
+                            <li><strong>Temporadas:</strong> <div class="d-inline-block">${seasons}</div></li>
+                        </ul>
 
                         <div class="mt-4">
                             <button class="btn btn-main" onclick="window.close()">Cerrar Ficha</button>

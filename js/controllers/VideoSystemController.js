@@ -34,8 +34,8 @@ class VideoSystemController {
             directorDetail: (state) => this.handleShowDirectorDetail(state.director),
             newProduction: () => this.handleNewProductionForm(),
             removeProduction: () => this.handleRemoveProductionForm(),
-            assProduction: () =>this.handleAssignProductionForm(),
-            desProduction: () =>this.handleDeassignProductionForm()
+            assProduction: () => this.handleAssignProductionForm(),
+            desProduction: () => this.handleDeassignProductionForm()
         };
 
         // Restaurar estado página
@@ -60,19 +60,19 @@ class VideoSystemController {
         // Añadir categorías
         this.#MODEL.addCategory(cat1, cat2, cat3);
 
-        // // Crear producciones
-        const prod1 = this.#MODEL.createProduction("Titulo1", "Movie", "Nacionalidad1", new Date(2001, 10, 10), "Sinopsis1", "Sin imagen");
-        const prod2 = this.#MODEL.createProduction("Titulo2", "Serie", "Nacionalidad2", new Date(2002, 10, 10), "Sinopsis2", "Sin imagen");
-        const prod3 = this.#MODEL.createProduction("Titulo3", "Movie", "Nacionalidad3", new Date(2003, 10, 10), "Sinopsis3", "Sin imagen");
-        const prod4 = this.#MODEL.createProduction("Titulo4", "Serie", "Nacionalidad4", new Date(2004, 10, 10), "Sinopsis4", "Sin imagen");
-        const prod5 = this.#MODEL.createProduction("Titulo5", "Movie", "Nacionalidad5", new Date(2005, 10, 10), "Sinopsis5", "Sin imagen");
-        const prod6 = this.#MODEL.createProduction("Titulo6", "Serie", "Nacionalidad6", new Date(2006, 10, 10), "Sinopsis6", "Sin imagen");
-        const prod7 = this.#MODEL.createProduction("Titulo7", "Movie", "Nacionalidad7", new Date(2007, 10, 10), "Sinopsis7", "Sin imagen");
-        const prod8 = this.#MODEL.createProduction("Titulo8", "Serie", "Nacionalidad8", new Date(2008, 10, 10), "Sinopsis8", "Sin imagen");
+        // Crear producciones
+        const prod1 = this.#MODEL.createProduction("Titulo1", "Movie", "Nacionalidad1", new Date(2001, 10, 10), "Sinopsis1", "Sin imagen", "Recurso1", ["Localización1", "Localización9"]);
+        const prod2 = this.#MODEL.createProduction("Titulo2", "Serie", "Nacionalidad2", new Date(2002, 10, 10), "Sinopsis2", "Sin imagen", "Recurso2", ["Localización2", "Localización10"], 2);
+        const prod3 = this.#MODEL.createProduction("Titulo3", "Movie", "Nacionalidad3", new Date(2003, 10, 10), "Sinopsis3", "Sin imagen", "Recurso3", ["Localización3", "Localización11"]);
+        const prod4 = this.#MODEL.createProduction("Titulo4", "Serie", "Nacionalidad4", new Date(2004, 10, 10), "Sinopsis4", "Sin imagen", "Recurso4", ["Localización4", "Localización12"], 3);
+        const prod5 = this.#MODEL.createProduction("Titulo5", "Movie", "Nacionalidad5", new Date(2005, 10, 10), "Sinopsis5", "Sin imagen", "Recurso5", ["Localización5", "Localización13"]);
+        const prod6 = this.#MODEL.createProduction("Titulo6", "Serie", "Nacionalidad6", new Date(2006, 10, 10), "Sinopsis6", "Sin imagen", "Recurso6", ["Localización6", "Localización14"], 4);
+        const prod7 = this.#MODEL.createProduction("Titulo7", "Movie", "Nacionalidad7", new Date(2007, 10, 10), "Sinopsis7", "Sin imagen", "Recurso7", ["Localización7", "Localización15"]);
+        const prod8 = this.#MODEL.createProduction("Titulo8", "Serie", "Nacionalidad8", new Date(2008, 10, 10), "Sinopsis8", "Sin imagen", "Recurso8", ["Localización8", "Localización16"], 5);
         // Añadir producción
         this.#MODEL.addProduction(prod1, prod2, prod3, prod4, prod5, prod6, prod7, prod8);
 
-        // // Asignar producciones a categoría
+        // Asignar producciones a categoría
         this.#MODEL.assignCategory(cat1, prod1, prod4, prod7, prod2, prod5);
         this.#MODEL.assignCategory(cat2, prod2, prod5, prod8, prod3, prod6);
         this.#MODEL.assignCategory(cat3, prod3, prod6, prod1, prod4, prod7);
@@ -89,7 +89,7 @@ class VideoSystemController {
         // Añadir actores
         this.#MODEL.addActor(act1, act2, act3, act4, act5, act6, act7, act8);
 
-        // // Asignar actores a producción
+        // Asignar actores a producción
         this.#MODEL.assignActor(act1, prod1, prod8);
         this.#MODEL.assignActor(act2, prod2, prod7);
         this.#MODEL.assignActor(act3, prod3, prod6);
@@ -111,7 +111,7 @@ class VideoSystemController {
         // Añadir directores
         this.#MODEL.addDirector(dir1, dir2, dir3, dir4, dir5, dir6, dir7, dir8);
 
-        // // Asignar directores a producción
+        // Asignar directores a producción
         this.#MODEL.assignDirector(dir1, prod8);
         this.#MODEL.assignDirector(dir2, prod7);
         this.#MODEL.assignDirector(dir3, prod6);
@@ -359,8 +359,22 @@ class VideoSystemController {
                 production = prod;
             }
         }
+
+        // Obtener actores que contengan la producción
+        const actProduction = [];
+        for (const act of this.#MODEL.getCast(production)) {
+            actProduction.push(act.name);
+        }
+
+        // Obtener directores que contengan la producción
+        const dirProduction = [];
+        for (const dir of this.#MODEL.getDirectors()) {
+            if (dir.productions.has(title)) {
+                dirProduction.push(dir.director.name);
+            }
+        }
         // Pasar la producción a la vista
-        this.#VIEW.showProductionInNewWindow(production);
+        this.#VIEW.showProductionInNewWindow(production, actProduction, dirProduction);
     }
 
     /**

@@ -148,12 +148,12 @@ function newProductionValidation(handler) {
                 ? this.npLocation.value.split(',').map(l => l.trim())
                 : [];
 
-            // Movie → resource (string)
+            // Movie
             const resource = this.npType.value === "Movie"
                 ? this.npResource.value
                 : null;
 
-            // Serie → resources (array)
+            // Serie (array)
             const resources = this.npType.value === "Serie"
                 ? this.npResource.value.split(',').map(r => r.trim())
                 : null;
@@ -201,6 +201,7 @@ function newProductionValidation(handler) {
 
     // Eventos de validación
     form.npTitle.addEventListener('change', defaultCheckElement);
+    form.npType.addEventListener('change', defaultCheckElement);
     form.npNationality.addEventListener('change', defaultCheckElement);
     form.npPubDate.addEventListener('change', defaultCheckElement);
     form.npImage.addEventListener('change', defaultCheckElement);
