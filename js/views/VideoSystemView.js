@@ -660,7 +660,7 @@ class VideoSystemView {
     }
 
     /**
-    * Mostrar producción en ventana nueva
+    * Mostrar producción en ventana nueva 
     */
     showProductionInNewWindow(prod, actNames, dirNames) {
         // Acceder al main y header de la ventana hija
